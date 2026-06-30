@@ -1,28 +1,50 @@
 import sys
 import os
+from pathlib import Path
 
-print("Current working directory:", os.getcwd())
-print("Files in root:", os.listdir('.'))
+print("=" * 60)
+print("🚀 CD Pipeline - Production ETL")
+print("=" * 60)
 
-target_path = os.path.join(os.getcwd(), 'orchenstration', 'Prefect')
-sys.path.insert(0, target_path)
-print(f"Added to Python path: {target_path}")
+# Current directory
+root_dir = Path(os.getcwd())
+print(f"Working Directory: {root_dir}")
 
-if os.path.exists(target_path):
-    print("Files in Prefect folder:", os.listdir(target_path))
-else:
-    print("[ERROR] Folder not found:", target_path)
+# Possible locations for etl_flow.py
+possible_paths = [
+    root_dir / "orchenstration" / "Prefect",
+    root_dir / "Prefect",
+    root_dir / "ETL-pipeline" / "Prefect",
+    root_dir / "orchenstration",
+]
 
+# Add paths and find etl_flow
+etl_flow_found = False
+for path in possible_paths:
+    if path.exists():
+        sys.path.insert(0, str(path))
+        print(f"✅ Added to Python path: {path}")
+        
+        if (path / "etl_flow.py").exists():
+            print(f"✅ Found etl_flow.py in: {path}")
+            etl_flow_found = True
+            break
+
+if not etl_flow_found:
+    print("❌ Could not find etl_flow.py")
+    sys.exit(1)
+
+# Import and run
 try:
     from etl_flow import etl_pipeline
-    print("[GREEN] Successfully imported etl_flow!")
-    
+    print("✅ Successfully imported etl_flow")
+
+    print("🚀 Starting Prefect ETL Pipeline in PRODUCTION...")
     etl_pipeline(target_date='2027-01-01', dry_run=False)
-    print('[GREEN] ✅ Prefect ETL Pipeline executed successfully via CD!')
     
-except ImportError as e:
-    print("[RED] Import failed:", e)
-    sys.exit(1)
+    print("[GREEN] ✅ Prefect ETL Pipeline executed successfully via CD!")
+    print("=" * 60)
+
 except Exception as e:
-    print("[RED] Error during execution:", e)
+    print(f"❌ Error during pipeline execution: {e}")
     sys.exit(1)
