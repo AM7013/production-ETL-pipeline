@@ -1,0 +1,16 @@
+version: 2
+
+exposures:
+  - name: customers_dashboard
+    description: "A dashboard for customers to view their orders and statuses."
+    type: dashboard
+    depends_on:
+      - ref('dbt_model')
+      - ref('status')
+      - ref('tax_calc')
+      - ref('total_by_status')
+      - ref('date_spine')
+      - ref('percentage_calc')
+    owner:
+      name: A.M
+      email: vexteleta@example.com 

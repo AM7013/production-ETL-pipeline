@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: dbt_model
+    description: "Core model from test table"
+    columns:
+      - name: '"OrderID"'
+        description: "Unique order identifier"
+        tests:
+          # - unique
+          - not_null
+          - is_positive
+
+
+      - name: '"CustomerName"'
+        description: "Customer name"
+        tests:
+          - not_null
+
+      - name: '"Status"'
+        description: "Order status"
+        tests:
+          - not_null
+
+      - name: '"TotalAmount"'
+        description: "Order total"
+        tests:
+          - is_positive
+          
+
+
+  
