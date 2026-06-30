@@ -12,5 +12,5 @@ exposures:
       - ref('date_spine')
       - ref('percentage_calc')
     owner:
-      name: A.M
-      email: vexteleta@example.com 
+      name: YourName
+      email: YourGmail@example.com 
