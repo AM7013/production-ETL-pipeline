@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+quarantine_zone.csv
+*.pyc
+*.pyo
+*.pyd
+*.log
+.git
+.gitignore
+README.md
