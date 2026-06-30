@@ -10,7 +10,6 @@
 
 ### dbt Docs and BigQuery
 
-<img width="1262" height="521" alt="Screenshot 2026-04-12 084035" src="https://github.com/user-attachments/assets/f0c0abe2-b7eb-4295-b100-ae2a9abfb207" />
 
 
 <img width="1492" height="561" alt="Screenshot 2026-04-12 084055" src="https://github.com/user-attachments/assets/3c315dbe-4396-4e41-b0bb-5465b484af08" />
