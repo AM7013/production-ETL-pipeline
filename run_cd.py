@@ -2,7 +2,7 @@ import sys
 import os
 
 
-sys.path.insert(0, os.path.join(os.getcwd(), 'Prefect'))
+sys.path.insert(0, os.path.join(os.getcwd(), 'orchenstration'))
 
 print('Current working directory:', os.getcwd())
 print('Files in root:', os.listdir('.'))
