@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.pyc
+*.log
+quarantine_zone.csv
+cleaned_data_v1.csv
