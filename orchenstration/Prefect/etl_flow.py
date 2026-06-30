@@ -39,7 +39,22 @@ def extract():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(script_dir) 
-    csv_path = os.path.join(root_dir, 'cleaned_data_v1.csv')     
+    possible_csv_files = ['cleaned_data_test.csv', 'cleaned_data_v1.csv']
+    
+    csv_path = None
+    for filename in possible_csv_files:
+        path = os.path.join(os.getcwd(), filename)
+        if os.path.exists(path):
+            csv_path = path
+            break
+        
+        path = os.path.join(os.getcwd(), 'Sample', filename)
+        if os.path.exists(path):
+            csv_path = path
+            break
+
+    if not csv_path:
+        raise FileNotFoundError(f"Could not find any CSV file. Tried: {possible_csv_files}") 
 
     logger.info(f"[WAIT] Reading file: {csv_path}")
 
