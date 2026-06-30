@@ -1,0 +1,31 @@
+name: prefect
+prefect-version: 3.7.2
+
+build: []
+push: []
+
+pull:
+- prefect.deployments.steps.set_working_directory:
+    directory: /opt/prefect
+
+deployments:
+- name: production-etl-autopilot
+  version: 1.0.0
+  tags: ["prod", "spark"]
+  description: "Production PySpark ETL pipeline running in a local process worker"
+  
+  entrypoint: "etl_flow.py:etl_pipeline" 
+  flow_name: "ETL Pipeline"                       
+
+  work_pool:
+    name: "etl-pool"                         
+    work_queue_name: null
+    job_variables:
+      image: "prefect-cloud-image:latest"           
+
+  schedule:
+    cron: "0 6 * * *"
+    timezone: "UTC"
+    active: true
+
+  parameters: {}
