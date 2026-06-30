@@ -224,6 +224,7 @@ jobs:
         
 
       - name: Run Prefect Flow
+        environment: production
         env:
           DB_CONNECTION_STRING: ${{ secrets.DB_URI }}
         run: |
