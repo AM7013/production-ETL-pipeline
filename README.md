@@ -59,16 +59,18 @@ git clone https://github.com/AM7013/production-ETL-pipeline.git
 cd production-ETL-pipeline
 
 ## Structure
-production-ETL-pipeline/
-├── etl-pipeline/          # Main ETL logic (Spark + Quality + Load)
-├── orchestration/         # Prefect flows
-├── dbt/                   # dbt models, snapshots, macros, tests
-├── .github/workflows/     # CI/CD pipelines
-├── Sample/                # Sample data
-├── Screenshot/            # Output examples
-├── requirements.txt
-├── .env.example
-└── README.md
+
+etl-pipeline/ — Core ETL logic (PySpark processing, data quality checks, and loading)
+
+orchestration/ — Prefect flows and orchestration
+
+dbt/ — dbt models, snapshots, macros, and tests
+
+.github/workflows/ — CI/CD pipelines (GitHub Actions)
+
+Sample/ — Sample input data
+
+Screenshot/ — Pipeline execution examples and outputs
 
 ## License
 
