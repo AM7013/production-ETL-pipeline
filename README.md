@@ -61,15 +61,11 @@ cd production-ETL-pipeline
 ## Structure
 The repository is organized by function:
 
-**src/** — ETL logic (extract, transform, load, quality)
+**ETL-Pipeline/** — ETL logic (extract, transform, load, quality)
 
 **orchestration/** — Prefect flows (and legacy Airflow DAGs)
 
-**transformations/** — dbt models, snapshots, macros, tests
-
-**infrastructure/** — Dockerfiles and compose
-
-**tests/** — Unit and integration tests
+**DBT/** — dbt models, snapshots, macros, tests
 
 **.github/** — CI/CD pipelines
 
