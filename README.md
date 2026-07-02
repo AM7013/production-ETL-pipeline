@@ -59,17 +59,16 @@ git clone https://github.com/AM7013/production-ETL-pipeline.git
 cd production-ETL-pipeline
 
 ## Structure
-The repository is organized by function:
-
-**ETL-Pipeline/** — ETL logic (extract, transform, load, quality)
-
-**orchestration/** — Prefect flows (and legacy Airflow DAGs)
-
-**DBT/** — dbt models, snapshots, macros, tests
-
-**.github/** — CI/CD pipelines
-
-For a detailed view, explore the repository directly.
+production-ETL-pipeline/
+├── etl-pipeline/          # Main ETL logic (Spark + Quality + Load)
+├── orchestration/         # Prefect flows
+├── dbt/                   # dbt models, snapshots, macros, tests
+├── .github/workflows/     # CI/CD pipelines
+├── Sample/                # Sample data
+├── Screenshot/            # Output examples
+├── requirements.txt
+├── .env.example
+└── README.md
 
 ## License
 
