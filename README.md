@@ -28,7 +28,21 @@ flowchart LR
     E --> G[dbt Transformations]
     G --> H[BigQuery Analytics]
 ```
+## Pipeline Actions
 
+# Data Quality Engine
+<img width="685" height="629" alt="image" src="https://github.com/user-attachments/assets/4cf42804-bd06-46c4-9bb9-2159e55ced48" alt= "Data Quality Report"/>
+
+# BiQuery Load
+<img width="1482" height="368" alt="Screenshot 2026-07-03 051832" src="https://github.com/user-attachments/assets/c249d01d-5ae7-43b7-a408-be56d64f09c6" alt="BigQuery Table Info" />
+
+# BigQuery In Console
+<img width="1645" height="286" alt="Screenshot 2026-04-22 211924" src="https://github.com/user-attachments/assets/ec26c181-8091-459c-9e4b-c9123bfde370" alt="BigQuery In Console Logs" />
+
+
+
+
+---
 ## Key Features
 
 - High-Performance Processing using PySpark that efficiently handles 500K+ rows with duplicate removal and schema inference
