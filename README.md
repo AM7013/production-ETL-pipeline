@@ -91,18 +91,38 @@ docker-compose up --build
 
 ## Structure
 
-etl-pipeline/ — Core ETL logic (PySpark processing, data quality checks, and loading)
+``` text
+production-ETL-pipeline/
+├── .github/
+│   └── workflows/
+│       ├── prefect-ci.yml          # Continuous Integration pipeline
+│       └── prefect-cd.yml          # Continuous Delivery pipeline
+├── dbt/                            # dbt transformations, models, and tests
+│   ├── models/
+│   ├── snapshots/
+│   ├── macros/
+│   └── tests/
+├── etl-pipeline/                   # Core ETL logic
+│   ├── extract.py                  # PySpark data extraction
+│   ├── transform.py                # Data cleaning and quality checks
+│   └── load.py                     # PostgreSQL and BigQuery loading
+├── orchestration/                  # Prefect flows and orchestration
+│   ├── flows/
+│   └── deployments/
+├── docker/                         # Docker configuration
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── samples/                        # Sample input data
+├── sandbox/                        # Experimental and temporary code
+├── .env.example                    # Environment variable template
+├── .gitignore
+├── .prefectignore
+├── .trivyignore
+├── requirements.txt
+├── LICENSE
+└── README.md
 
-orchestration/ — Prefect flows and orchestration
-
-dbt/ — dbt models, snapshots, macros, and tests
-
-.github/workflows/ — CI/CD pipelines (GitHub Actions)
-
-samples/ — Sample input data
-
-Screenshot/ — Pipeline execution examples and outputs
-
+```
 ## License
 
 MIT License - see LICENSE file for details.
