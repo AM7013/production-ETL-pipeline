@@ -15,6 +15,17 @@ A modern, scalable batch ETL pipeline that processes 500K+ orders with 97.5% dat
 
 Built with best practices: observability, CI/CD with manual approval, Docker, and production-ready deployment.
 
+
+## Results & Impact
+
+- **Processed 500,000+ rows** successfully end-to-end
+- **Achieved 97.5% data quality score**
+- **Automated quarantine** of ~2.5% invalid records
+- **Production-ready** with CI/CD, Docker, and manual approval gates
+- Dual warehouse architecture (PostgreSQL staging + optimized BigQuery analytics)
+
+---
+
 ## Architecture
 
 ```mermaid
