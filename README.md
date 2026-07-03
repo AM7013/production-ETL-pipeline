@@ -58,6 +58,7 @@ flowchart LR
 git clone https://github.com/AM7013/production-ETL-pipeline.git
 
 cd production-ETL-pipeline
+
 cp .env.example .env
 
 docker-compose up --build
