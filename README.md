@@ -72,7 +72,7 @@ dbt/ — dbt models, snapshots, macros, and tests
 
 .github/workflows/ — CI/CD pipelines (GitHub Actions)
 
-Sample/ — Sample input data
+samples/ — Sample input data
 
 Screenshot/ — Pipeline execution examples and outputs
 
