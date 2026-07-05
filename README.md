@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <strong>End-to-End • Production Ready • Data Quality First</strong>
+  <strong> "Making Data Trustworthy at Scale" </strong>
 </p>
 
 
