@@ -88,7 +88,7 @@ flowchart LR
 - Cloud warehousing best practices (partitioning + clustering) have a massive impact on both cost and query performance
 
 ## Quick Start
-
+``` bash
 git clone https://github.com/AM7013/production-ETL-pipeline.git
 
 cd production-ETL-pipeline
@@ -96,6 +96,7 @@ cd production-ETL-pipeline
 cp .env.example .env
 
 docker-compose up --build
+```
 
 ## Structure
 ``` text
