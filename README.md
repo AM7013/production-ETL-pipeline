@@ -28,7 +28,7 @@ flowchart LR
     E --> G[dbt Transformations]
     G --> H[BigQuery Analytics]
 ```
-## Pipeline Actions
+## Pipeline In Action
 
 # Data Quality Engine
 <img width="685" height="629" alt="image" src="https://github.com/user-attachments/assets/4cf42804-bd06-46c4-9bb9-2159e55ced48" alt= "Data Quality Report"/>
