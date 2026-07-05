@@ -1,12 +1,20 @@
 # Production-Grade ETL Pipeline
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![SQL](https://img.shields.io/badge/SQL-ffA500?style=for-the-badge&logo=SQL&logoColor=white)
-![PySpark](https://img.shields.io/badge/PySpark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
-![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
-![Prefect](https://img.shields.io/badge/Prefect-2C3E50?style=for-the-badge&logo=prefect&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/SQL-ffA500?logo=sql&logoColor=white" />
+  <img src="https://img.shields.io/badge/PySpark-E25A1C?logo=apachespark&logoColor=white" />
+  <img src="https://img.shields.io/badge/dbt-FF694B?logo=dbt&logoColor=white" />
+  <img src="https://img.shields.io/badge/Prefect-2C3E50?logo=prefect&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/BigQuery-4285F4?logo=googlecloud&logoColor=white" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?logo=github-actions&logoColor=white" />
+</p>
+
+<p align="center">
+  <strong>End-to-End • Production Ready • Data Quality First</strong>
+</p>
+
 
 <br>
 
