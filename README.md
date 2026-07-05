@@ -48,7 +48,16 @@ flowchart LR
 <img width="1645" height="286" alt="Screenshot 2026-04-22 211924" src="https://github.com/user-attachments/assets/ec26c181-8091-459c-9e4b-c9123bfde370" alt="BigQuery In Console Logs" />
 
 
+## Why This Pipeline?
 
+Most data pipelines:
+- ❌ Break silently in production
+- ❌ Load garbage data
+- ❌ Have no observability
+- ❌ Bad Secuirty and quality checks
+- ❌ Not enough tests 
+
+**This pipeline fixes all of that.**
 
 ---
 ## Key Features
