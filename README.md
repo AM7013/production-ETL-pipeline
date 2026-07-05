@@ -35,14 +35,45 @@ Built with best practices: observability, CI/CD with manual approval, Docker, an
 
 ```mermaid
 flowchart LR
-    A[CSV Files] --> B[Spark Processing]
-    B --> C[Data Quality Engine]
-    C --> D{Quality > 80%?}
-    D -->|Yes| E[PostgreSQL Staging]
-    D -->|No| F[Quarantine Zone]
-    E --> G[dbt Transformations]
-    G --> H[BigQuery Analytics]
+    subgraph SOURCE["📥 Data Source"]
+        A[CSV Files\n500K+ Records]
+    end
+
+    subgraph PROCESS["⚙️ Processing Layer"]
+        B[PySpark ETL]
+        C[Data Quality Engine\n97.5% Score]
+        D{Quarantine\nDecision}
+    end
+
+    subgraph STORAGE["💾 Storage Layer"]
+        E[PostgreSQL\nStaging]
+        F[Quarantine Zone]
+        G[BigQuery\nAnalytics]
+    end
+
+    subgraph TRANSFORM["🔄 Transformation Layer"]
+        H[dbt Models & Tests]
+        I[SCD Type 2 Snapshots]
+    end
+
+    subgraph ORCH["🎛️ Orchestration"]
+        K[Prefect Cloud]
+        L[GitHub Actions\nCI/CD]
+    end
+
+    A --> B
+    B --> C
+    C --> D
+    D -->|Score ≥ 80%| E
+    D -->|Score < 80%| F
+    E --> G
+    E --> H
+    H --> I
+    K --> B
+    K --> H
+    L --> K
 ```
+
 ## Pipeline In Action
 
 # Data Quality Engine
