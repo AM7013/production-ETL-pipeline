@@ -1,6 +1,13 @@
 # Production-Grade ETL Pipeline
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue" />
+  <img src="https://img.shields.io/badge/Quality-97.5%25-brightgreen" />
+  <img src="https://img.shields.io/badge/Records-500K%2B-blue" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/SQL-ffA500?logo=sql&logoColor=white" />
   <img src="https://img.shields.io/badge/PySpark-E25A1C?logo=apachespark&logoColor=white" />
@@ -95,6 +102,52 @@ Most data pipelines:
 - Modern orchestration tools like Prefect offer significantly better developer experience than traditional tools for mid-size pipelines
 - Proper CI/CD with manual approval gates and deployment tagging dramatically increases confidence in production deployments
 - Cloud warehousing best practices (partitioning + clustering) have a massive impact on both cost and query performance
+
+
+
+---
+## Documentation
+
+- [ETL-Pipeline](etl-pipeline/etl_pipeline.py)
+- [Data Tests](dbt/models/Tests/)
+- [Prefect Flow Documentation](orchestration/Prefect/etl_flow.py)
+- [CI/CD Pipeline Details](.github/workflows/)
+- [Sample Tests](samples/)
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `docker-compose up` fails | Make sure Docker Desktop is running and you have copied `.env.example` to `.env` |
+| Permission error on volumes | Run `docker-compose down -v` then `docker-compose up --build` |
+| BigQuery authentication error | Set up your `GOOGLE_APPLICATION_CREDENTIALS` in `.env` |
+| dbt model failures | Run `dbt debug` and check connection to BigQuery/PostgreSQL |
+| Prefect flow not visible | Check you're logged in with `prefect cloud login` |
+| High memory usage | Increase Docker resource limits or reduce Spark partitions |
+
+---
+
+## Roadmap
+- [x] Built scalable PySpark ETL pipeline handling 500K+ records
+- [x] Implemented advanced Data Quality Engine with 97.5% score + quarantine logic
+- [x] Integrated dbt for transformations (incremental models, SCD Type 2, 20+ tests)
+- [x] Set up dual warehousing (PostgreSQL staging + BigQuery analytics)
+- [x] Containerized with Docker + multi-stage builds
+- [x] Implemented CI/CD with GitHub Actions (manual approval + security scanning)
+- [x] Migrated orchestration from Airflow to Prefect Cloud
+- [x] Added comprehensive logging and monitoring
+- [ ] Deepening DBT
+- [ ] Inline docstrings
+- [ ] Deepening BigQuery
+- [ ] IAM
+- [ ] Better Observability
+- [ ] Automated data lineage visualization
+- [ ] Grafana monitoring dashboard
+- [ ] Multi-environment support (dev/staging/prod)
+- [ ] Cost monitoring & optimization alerts
+- [ ] API-based data ingestion
 
 ## Quick Start
 ``` bash
