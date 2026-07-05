@@ -90,15 +90,38 @@ cp .env.example .env
 docker-compose up --build
 
 ## Structure
-
-etl-pipeline/ — Core ETL logic (PySpark processing, data quality checks, and loading)
-
-orchestration/ — Prefect flows and orchestration
-
-dbt/ — dbt models, snapshots, macros, and tests
-
-.github/workflows/ — CI/CD pipelines (GitHub Actions)
-
+``` text
+production-ETL-pipeline/
+├── .github/
+│   └── workflows/
+│       ├── prefect-ci.yml
+│       └── prefect-cd.yml
+├── Screenshot/                  # Screenshots for README
+├── dbt/                         # dbt project
+│   ├── macros/
+│   ├── models/
+│   ├── snapshots/
+│   ├── tests/
+│   └── ... (other dbt folders)
+├── etl-pipeline/                # Core ETL logic
+├── orchestration/               # Prefect flows
+│   └── Prefect/
+│       └── etl_flow.py
+├── samples/                     # Sample data
+│   └── cleaned_data_test.csv
+├── sandbox/                     # Experimental code
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── .prefectignore
+├── .trivyignore
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── run_cd.py
+└── (other root files)
+```
 ## License
 
 MIT License - see LICENSE file for details.
