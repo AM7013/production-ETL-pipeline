@@ -92,7 +92,7 @@ Most data pipelines:
 - ❌ Break silently in production
 - ❌ Load garbage data
 - ❌ Have no observability
-- ❌ Bad Secuirty and quality checks
+- ❌ Bad Security and quality checks
 - ❌ Not enough tests 
 
 **This pipeline fixes all of that.**
@@ -163,7 +163,7 @@ Most data pipelines:
 ## Roadmap
 - [x] Built scalable PySpark ETL pipeline handling 500K+ records
 - [x] Implemented advanced Data Quality Engine with 97.5% score + quarantine logic
-- [x] Integrated dbt for transformations (incremental models, SCD Type 2, 20+ tests)
+- [x] Integrated dbt for transformations (incremental models, SCD Type 2, tests)
 - [x] Set up dual warehousing (PostgreSQL staging + BigQuery analytics)
 - [x] Containerized with Docker + multi-stage builds
 - [x] Implemented CI/CD with GitHub Actions (manual approval + security scanning)
