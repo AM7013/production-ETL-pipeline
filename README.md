@@ -169,7 +169,7 @@ Most data pipelines:
 - [x] Implemented CI/CD with GitHub Actions (manual approval + security scanning)
 - [x] Migrated orchestration from Airflow to Prefect Cloud
 - [x] Added comprehensive logging and monitoring
-- [ ] Deepening DBT
+- [x] Deepening DBT
 - [ ] Inline docstrings
 - [ ] Deepening BigQuery
 - [ ] IAM
