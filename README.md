@@ -102,7 +102,7 @@ Most data pipelines:
 
 - High-Performance Processing using PySpark that efficiently handles 500K+ rows with duplicate removal and schema inference
 - Advanced Data Quality Engine with automated scoring across 11 columns and intelligent quarantine system
-- Modern Transformations using dbt with incremental models, SCD Type 2 snapshots, custom macros, and 20+ tests
+- Modern Transformations using dbt with incremental models, SCD Type 2 snapshots, custom macros, and tests
 - Dual Warehousing setup with PostgreSQL for staging and BigQuery for analytics (with proper partitioning and clustering)
 - Full Containerization using Docker with multi-stage builds and health checks
 - Production-grade CI/CD using GitHub Actions with security scanning, manual approval gates, and deployment tagging
