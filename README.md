@@ -170,12 +170,10 @@ Most data pipelines:
 - [x] Migrated orchestration from Airflow to Prefect Cloud
 - [x] Added comprehensive logging and monitoring
 - [x] Deepening DBT
-- [ ] Inline docstrings
-- [ ] Deepening BigQuery
-- [ ] IAM
+- [x] Deepening BigQuery
+- [x] IAM
 - [ ] Better Observability
 - [ ] Automated data lineage visualization
-- [ ] Grafana monitoring dashboard
 - [ ] Multi-environment support (dev/staging/prod)
 - [ ] Cost monitoring & optimization alerts
 - [ ] API-based data ingestion
