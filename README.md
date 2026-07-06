@@ -175,7 +175,6 @@ Most data pipelines:
 - [x] Deepening BigQuery
 - [x] IAM
 - [ ] Better Observability
-- [ ] Automated data lineage visualization
 
 ## Quick Start
 ``` bash
