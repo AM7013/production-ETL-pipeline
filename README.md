@@ -169,14 +169,13 @@ Most data pipelines:
 - [x] Implemented CI/CD with GitHub Actions (manual approval + security scanning)
 - [x] Migrated orchestration from Airflow to Prefect Cloud
 - [x] Added comprehensive logging and monitoring
+- [x] Cost monitoring & optimization alerts
+- [x] Multi-environment support (dev/staging/prod)
 - [x] Deepening DBT
 - [x] Deepening BigQuery
 - [x] IAM
 - [ ] Better Observability
 - [ ] Automated data lineage visualization
-- [ ] Multi-environment support (dev/staging/prod)
-- [ ] Cost monitoring & optimization alerts
-- [ ] API-based data ingestion
 
 ## Quick Start
 ``` bash
