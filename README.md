@@ -174,7 +174,6 @@ Most data pipelines:
 - [x] Deepening DBT
 - [x] Deepening BigQuery
 - [x] IAM
-- [ ] Better Observability
 
 ## Quick Start
 ``` bash
