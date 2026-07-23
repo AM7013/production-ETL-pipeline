@@ -173,7 +173,9 @@ Most data pipelines:
 - [x] Multi-environment support (dev/staging/prod)
 - [x] Deepening DBT
 - [x] Deepening BigQuery
-- [x] IAM
+- [ ] Improve Quality Checks
+- [ ] Fix hardcoded values
+- [ ] Fix Monolithic script 
 
 ## Quick Start
 ``` bash
