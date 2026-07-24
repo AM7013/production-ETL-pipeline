@@ -175,7 +175,8 @@ Most data pipelines:
 - [x] Deepening BigQuery
 - [ ] Improve Quality Checks
 - [ ] Fix hardcoded values
-- [ ] Fix Monolithic script 
+- [ ] Fix Monolithic script
+- [ ] Add CI/CD for DBT
 
 ## Quick Start
 ``` bash
