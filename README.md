@@ -115,6 +115,7 @@ Most data pipelines:
 - Quarantine Logic: Automatically isolates rows below 80% quality threshold
 - Invalid Data Detected: ~2.5% of records (auto-quarantined)
 - Columns Validated: 11 critical columns
+- Daily run time at 6 AM
 
 ## Tech Stack
 
