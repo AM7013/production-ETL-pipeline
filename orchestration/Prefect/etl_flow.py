@@ -8,6 +8,17 @@ from pyspark.sql import SparkSession
 from prefect_shell import shell_run_command
 from dbt_task import run_dbt_models, test_dbt_models
 from pathlib import Path
+from config import (
+    BQ_PROJECT_ID,
+    BQ_DATASET,
+    BQ_TABLE,
+    CSV_FILENAME,
+    QUARANTINE_FILE,
+    QUALITY_THRESHOLD,
+    PROJECT_ROOT,
+    PREFECT_API_URL
+)
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,7 +27,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-PROJECT_ROOT = Path(__file__).parent.parent
 
 table_name = "test"
 
@@ -28,7 +38,7 @@ def log_start():
 
 @task
 def extract():
-    os.environ["PREFECT_API_URL"] = "https://api.prefect.cloud/api/accounts/5e2a7dd3-10e0-49a4-a447-6d6a83552b2c/workspaces/c128ac14-0a9f-4353-b2ba-0e2687775ec1"
+    os.environ["PREFECT_API_URL"] = PREFECT_API_URL
     os.environ["HADOOP_HOME"] = ""
     os.environ["SPARK_LOG4J_DIR"] = "."
     os.environ["PYSPARK_PYTHON"] = "python"
@@ -44,15 +54,14 @@ def extract():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(script_dir) 
-    csv_path = os.path.join(root_dir, 'cleaned_data_v1.csv')     
+    csv_path = PROJECT_ROOT / CSV_FILENAME  
 
     logger.info(f"[WAIT] Reading file: {csv_path}")
 
-    if not os.path.exists(csv_path):
+    if not csv_path.exists():
         raise FileNotFoundError(f"File not found: {csv_path}")
 
-
-    spark_df = spark.read.csv(csv_path, header=True, inferSchema=True)
+    spark_df = spark.read.csv(str(csv_path), header=True, inferSchema=True)
 
     logger.info(f'[OK] Read successful! Rows: {spark_df.count()}')
     logger.info('[WAIT] Processing Data...')
@@ -78,66 +87,85 @@ def extract():
 
 
 @task
-def transform(pandas_df):
-    logger.info("[WAIT] Running Data Quality Checks...")
-    logger.info("[OK] Quality checks completed")
-    logger.info("\n[CRITICAL] CRITICAL METRICS:")
+def run_quality_checks(pandas_df):
+    logger.info("[QUALITY] Starting Data Quality Checks...")
+
     columns_to_check = [
-        'CustomerName', 'Email', 'ProductName', 
+        'CustomerName', 'Email', 'ProductName',
         'UnitPrice', 'TotalAmount', 'OrderDate',
         'Region', 'Status', 'Discount'
     ]
 
+    report = {
+        "total_rows": 0,
+        "invalid_rows": 0,
+        "clean_rows": 0,
+        "quality_score": 0.0,
+        "invalid_breakdown": {},
+        "passed": False
+    }
+
     try:
         if pandas_df is None or pandas_df.empty:
-            invalid_rows_mask = pd.Series([])
-        else:
-            invalid_rows_mask = pd.Series([False] * len(pandas_df))
+            logger.warning("[QUALITY] Empty DataFrame received")
+            return pandas_df, report
 
-        for col in columns_to_check:
-            if col in pandas_df.columns:
-                invalid_rows_mask = invalid_rows_mask | pandas_df[col].astype(str).str.contains('{.*}', na=False)
-
-        if 'Status' in pandas_df.columns:
-            invalid_rows_mask = invalid_rows_mask | (pandas_df['Status'] == '{UNKNOWN}')
-
-        invalid_rows = invalid_rows_mask.sum()
         total_rows = len(pandas_df)
+        invalid_rows_mask = pd.Series([False] * total_rows)
 
-        quality_score = ((total_rows - invalid_rows) / total_rows) * 100
-
-        logger.info(f"  • Total rows checked: {total_rows}")
-        logger.info(f"  • Rows with ANY invalid data: {invalid_rows}")
-        logger.info(f"  • Clean rows: {total_rows - invalid_rows}")
-
-        logger.info("\n[SEARCH] INVALID DATA BREAKDOWN:")
+        # Check for invalid values like {something}
         for col in columns_to_check:
             if col in pandas_df.columns:
-                invalid_count = pandas_df[col].astype(str).str.contains('{.*}', na=False).sum()
+                col_invalid = pandas_df[col].astype(str).str.contains(r'\{.*\}', na=False)
+                invalid_count = col_invalid.sum()
                 if invalid_count > 0:
-                    logger.info(f"  • Invalid {col}: {invalid_count}")
+                    report["invalid_breakdown"][col] = int(invalid_count)
+                invalid_rows_mask = invalid_rows_mask | col_invalid
 
+        # Special check for Status
         if 'Status' in pandas_df.columns:
-            unknown_status = (pandas_df['Status'] == '{UNKNOWN}').sum()
-            if unknown_status > 0:
-                logger.info(f"  • Unknown Status: {unknown_status}")
+            unknown_status = (pandas_df['Status'] == '{UNKNOWN}')
+            unknown_count = unknown_status.sum()
+            if unknown_count > 0:
+                report["invalid_breakdown"]["Unknown Status"] = int(unknown_count)
+            invalid_rows_mask = invalid_rows_mask | unknown_status
 
-        logger.info(f"\n[METRIC] DATA QUALITY SCORE: {quality_score:.1f}% clean")
+        invalid_rows = int(invalid_rows_mask.sum())
+        clean_rows = total_rows - invalid_rows
+        quality_score = (clean_rows / total_rows) * 100 if total_rows > 0 else 0.0
 
-        if quality_score < 80.0:
-            logger.warning(f"\n[STOP] Data Quality is too low ({quality_score:.1f}%)")
-            logger.warning("[ALERT] Pipeline is in low clean state")
-            logger.warning('[SEND] Sending The Pipeline to "quarantine_zone.csv..."')
-            pandas_df.to_csv('quarantine_zone.csv', index=False)
-            logger.warning('[SENT] Pipeline sent to "quarantine_zone.csv"')
+        report.update({
+            "total_rows": total_rows,
+            "invalid_rows": invalid_rows,
+            "clean_rows": clean_rows,
+            "quality_score": round(quality_score, 1),
+            "passed": quality_score >= QUALITY_THRESHOLD
+        })
+
+        # Logging
+        logger.info(f"  • Total rows checked : {total_rows}")
+        logger.info(f"  • Invalid rows       : {invalid_rows}")
+        logger.info(f"  • Clean rows         : {clean_rows}")
+        logger.info(f"  • Quality Score      : {quality_score:.1f}%")
+
+        if report["invalid_breakdown"]:
+            logger.info("\n[SEARCH] Invalid Data Breakdown:")
+            for col, count in report["invalid_breakdown"].items():
+                logger.info(f"  • {col}: {count}")
+
+        # Quarantine decision
+        if not report["passed"]:
+            logger.warning(f"[STOP] Quality too low ({quality_score:.1f}%) → Sending to quarantine")
+            pandas_df.to_csv(QUARANTINE_FILE, index=False)
+            logger.warning(f"[SENT] Data saved to {QUARANTINE_FILE}")
         else:
-            logger.info("\n[OK] QUALITY CHECK PASSED! Proceeding to load...")
+            logger.info("[OK] Quality check passed")
 
     except Exception as e:
-        logger.error(f"[ERROR] Error during quality check: {e}")
-        logger.warning("[ALERT] But pipeline will still attempt to load data (with potential issues)")
+        logger.error(f"[ERROR] Quality check failed: {e}")
+        report["passed"] = False
 
-    return pandas_df
+    return pandas_df, report
 
 
 def alert_on_crash(task, task_run, state):
@@ -147,10 +175,11 @@ def alert_on_crash(task, task_run, state):
 def load_to_bigquery(data):
     logger.info(f"[{datetime.now()}] [SEND] Writing cleaned data to BigQuery...")
     try:
+        destination_table = f"{BQ_DATASET}.{BQ_TABLE}"
         pandas_gbq.to_gbq(
             data,
-            destination_table="my_etl_data.cleaned_data_from_spark",
-            project_id="production-etl-pipeline",
+            destination_table=destination_table,
+            project_id=BQ_PROJECT_ID,
             if_exists="replace"
         )
         logger.info(f"[OK] Successfully uploaded {len(data):,} rows to BigQuery!")
@@ -170,8 +199,11 @@ def etl_pipeline(target_date: str = None, dry_run: bool = False):
     logger.info(f"[START] Processing data for date: {target_date}")
     log_start()
     raw_data = extract()
-    cleaned_data = transform(raw_data)
-    load_to_bigquery(cleaned_data)
+    cleaned_data, quality_report = run_quality_checks(raw_data)
+    if quality_report["passed"]:
+        load_to_bigquery(cleaned_data)
+    else:
+        logger.warning("[SKIP] Skipping load because quality check failed")
     run_dbt_models()
     test_dbt_models()
 
