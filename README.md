@@ -174,8 +174,8 @@ Most data pipelines:
 - [x] Multi-environment support (dev/staging/prod)
 - [x] Deepening DBT
 - [x] Deepening BigQuery
-- [ ] Improve Quality Checks
-- [ ] Fix hardcoded values
+- [x] Improve Quality Checks in etl_flow.py
+- [x] Fix hardcoded values
 - [ ] Fix Monolithic script
 - [ ] Add CI/CD for DBT
 
