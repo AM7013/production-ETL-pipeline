@@ -178,6 +178,7 @@ Most data pipelines:
 - [x] Fix hardcoded values
 - [ ] Fix Monolithic script
 - [ ] Add CI/CD for DBT
+- [ ] Better CLI
 
 ## Quick Start
 ``` bash
