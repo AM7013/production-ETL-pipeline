@@ -190,6 +190,10 @@ cp .env.example .env
 
 docker-compose up --build
 ```
+use this line for running the all the content inside the [Tests](etl-pipeline/tests/) folder
+``` bash
+python -m pytest tests/ -v
+```
 
 ## Structure
 ``` text
