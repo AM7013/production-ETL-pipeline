@@ -97,6 +97,63 @@ Most data pipelines:
 
 **This pipeline fixes all of that.**
 
+
+
+## Pipeline Architecture & System Overview
+
+```text
+[ Raw Data CSV ]
+       │
+       ▼
+┌────────────────────────────────────────────────────────┐
+│ 1. INGESTION ENGINE (ingestion.py)                     │
+│    • PySpark Session (500K+ rows)                      │
+│    • Schema Inference & Deduplication (OrderID)        │
+└────────────────────────┬───────────────────────────────┘
+                         │ (Pandas DataFrame)
+                         ▼
+┌────────────────────────────────────────────────────────┐
+│ 2. SCHEMA GATE (schema_validation.py)                  │
+│    • Required Column Checks & Coercion Safeguards     │
+└────────────────────────┬───────────────────────────────┘
+                         │
+                         ▼
+┌────────────────────────────────────────────────────────┐
+│ 3. QUALITY AUDITOR & QUARANTINE (quality.py)           │
+│    • Row-level Rule Checks (Email, Ranges, Statuses)   │
+│    • Quality Score < Threshold?                        │
+└───────────────┬────────────────────────┬───────────────┘
+                │                        │
+   [ Score >= Threshold ]        [ Score < Threshold ]
+                │                        │
+                ▼                        ▼
+┌────────────────────────┐      ┌────────────────────────┐
+│ 4. STORAGE ADAPTERS    │      │ QUARANTINE ZONE        │
+│    (storage.py)        │      │ (quarantine_zone.csv)  │
+│                        │      │ • Bad records tagged   │
+│  a) PostgreSQL Staging │      │   with reason          │
+│     • COPY FROM STDIN  │      │ • Pipeline Halted      │
+│     • Temp Table Dedupe│      └────────────────────────┘
+│                        │
+│  b) BigQuery Warehouse │
+│     • Partition & Cluster│
+└───────────┬────────────┘
+            │
+            ▼
+┌────────────────────────────────────────────────────────┐
+│ 5. ANALYTICS TRANSFORMATION (dbt)                      │
+│    • Staging & Mart Models                             │
+│    • Data Tests & Documentation                        │
+└────────────────────────┬───────────────────────────────┘
+                         │
+                         ▼
+┌────────────────────────────────────────────────────────┐
+│ 6. OBSERVABILITY & RUN AUDIT (tracking.py)             │
+│    • Threaded run_id (UUID) & loaded_at Timestamps     │
+│    • Persisted to `pipeline_runs` in Postgres          │
+└────────────────────────────────────────────────────────┘
+```
+
 ---
 ## Key Features
 
@@ -228,6 +285,8 @@ production-ETL-pipeline/
 ├── run_cd.py
 └── (other root files)
 ```
+
+
 ## License
 
 MIT License - see LICENSE file for details.
