@@ -176,7 +176,7 @@ Most data pipelines:
 - [x] Deepening BigQuery
 - [x] Improve Quality Checks in etl_flow.py
 - [x] Fix hardcoded values
-- [ ] Fix Monolithic script
+- [x] Fix Monolithic script
 - [ ] Add CI/CD for DBT
 - [ ] Better CLI
 
