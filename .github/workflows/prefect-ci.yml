@@ -47,6 +47,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
+            perfect-shell \
             python-dotenv
 
       - name: Check Prefect Flow Import
@@ -80,6 +81,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
+            perfect-shell \
             python-dotenv
 
       
@@ -159,7 +161,7 @@ jobs:
           
           import pandas as pd
           import logging
-          from etl_flow import transform
+          from etl_flow import run_quality_checks
 
           logging.basicConfig(level=logging.INFO)
 
@@ -180,7 +182,7 @@ jobs:
           mock_data.loc[0, 'Email'] = '{INVALID_EMAIL}'
           mock_data.loc[1, 'TotalAmount'] = '{INVALID}'
 
-          result = transform(mock_data)
+          result = run_quality_checks(mock_data)
           print('[GREEN] Quality check completed')
           "
 
@@ -206,6 +208,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
+            perfect-shell \
             python-dotenv
 
       - name: Set up Docker Buildx
