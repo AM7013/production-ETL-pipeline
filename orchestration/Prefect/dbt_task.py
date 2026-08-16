@@ -29,8 +29,11 @@ def run_dbt_models():
     print(result.stdout)
     if result.returncode != 0:
         print(result.stderr)
-        raise RuntimeError(f"dbt run failed (exit {result.returncode})")
-    return result.stdout
+        raise RuntimeError(
+            f"dbt run failed (exit {result.returncode})\n"
+            f"--- dbt stdout ---\n{result.stdout}\n"
+            f"--- dbt stderr ---\n{result.stderr}"
+        )
 
 @task(name="Test dbt models", log_prints=True)
 def test_dbt_models():
