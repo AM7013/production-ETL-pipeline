@@ -40,6 +40,8 @@ jobs:
             pyspark \
             psycopg2-binary \
             python-dotenv \
+            dbt-core \
+            dbt-postgres
 
 
       - name: Run Prefect Flow
@@ -75,7 +77,9 @@ jobs:
             pyspark \
             psycopg2-binary \
             perfect-shell \
-            python-dotenv
+            python-dotenv \
+            dbt-core \
+            dbt-postgres
 
       - name: Run prefect flow (TAGGING)
         env:
