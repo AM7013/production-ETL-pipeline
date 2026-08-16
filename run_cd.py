@@ -12,10 +12,10 @@ print(f"Working Directory: {root_dir}")
 
 # Possible locations for etl_flow.py
 possible_paths = [
-    root_dir / "orchenstration" / "Prefect",
+    root_dir / "orchestration" / "Prefect",
     root_dir / "Prefect",
     root_dir / "ETL-pipeline" / "Prefect",
-    root_dir / "orchenstration",
+    root_dir / "orchestration",
 ]
 
 # Add paths and find etl_flow
