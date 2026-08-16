@@ -2,7 +2,6 @@ import sys
 import os
 from pathlib import Path
 import subprocess
-from config import PROJECT_ROOT, PREFECT_API_URL, CSV_FILENAME, DBT_PATH
 print("=" * 60)
 print("🚀 CD Pipeline - Production ETL")
 print("=" * 60)
@@ -57,7 +56,7 @@ dbt_candidates = [
     PROJECT_ROOT / "DBT" / "pipeline_dbt",
     PROJECT_ROOT / "dbt",
 ]
-
+DBT_PATH = None
 for path in dbt_candidates:
     if path.exists():
         DBT_PATH = path
