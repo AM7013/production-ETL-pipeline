@@ -1,50 +1,69 @@
 import sys
 import os
 from pathlib import Path
+import subprocess
 
 print("=" * 60)
 print("🚀 CD Pipeline - Production ETL")
 print("=" * 60)
 
-# Current directory
 root_dir = Path(os.getcwd())
 print(f"Working Directory: {root_dir}")
 
-# Possible locations for etl_flow.py
+
+# Find the Prefect folder
+print(f"[DEBUG] Checking: {(root_dir / 'orchestration' / 'Prefect' / 'etl_flow.py')}")
+print(f"[DEBUG] Exists?: {(root_dir / 'orchestration' / 'Prefect' / 'etl_flow.py').exists()}")
+
+prefect_folder = None
 possible_paths = [
     root_dir / "orchestration" / "Prefect",
     root_dir / "Prefect",
     root_dir / "ETL-pipeline" / "Prefect",
-    root_dir / "orchestration",
 ]
 
-# Add paths and find etl_flow
-etl_flow_found = False
 for path in possible_paths:
-    if path.exists():
-        sys.path.insert(0, str(path))
-        print(f"✅ Added to Python path: {path}")
-        
-        if (path / "etl_flow.py").exists():
-            print(f"✅ Found etl_flow.py in: {path}")
-            etl_flow_found = True
-            break
+    etl_file = path / "etl_flow.py"
+    if etl_file.exists():
+        prefect_folder = path
+        print(f"✅ Found etl_flow.py in: {prefect_folder}")
+        break
 
-if not etl_flow_found:
+if not prefect_folder:
     print("❌ Could not find etl_flow.py")
     sys.exit(1)
 
-# Import and run
-try:
-    from etl_flow import etl_pipeline
-    print("✅ Successfully imported etl_flow")
+# Change to the Prefect folder and run etl_flow.py directly
+print(f"📂 Changing to: {prefect_folder}")
+os.chdir(prefect_folder)
 
-    print("🚀 Starting Prefect ETL Pipeline in PRODUCTION...")
-    etl_pipeline(target_date='2027-01-01', dry_run=False)
-    
-    print("[GREEN] ✅ Prefect ETL Pipeline executed successfully via CD!")
+# Run etl_flow.py as a script
+cmd = ["python", "etl_flow.py"]
+print("🚀 Running: python etl_flow.py")
+print("=" * 60)
+
+result = subprocess.run(cmd, capture_output=False, text=True)
+
+if result.returncode == 0:
+    print("\n[GREEN] ✅ Prefect ETL Pipeline executed successfully via CD!")
     print("=" * 60)
+else:
+    print(f"\n[RED] ❌ Pipeline failed with exit code: {result.returncode}")
+    print("=" * 60)
+    sys.exit(result.returncode)
 
-except Exception as e:
-    print(f"❌ Error during pipeline execution: {e}")
-    sys.exit(1)
+
+dbt_candidates = [
+    PROJECT_ROOT / "DBT" / "pipeline_dbt",
+    PROJECT_ROOT / "orchestration" / "DBT" / "pipeline_dbt",
+    PROJECT_ROOT / "dbt",
+]
+
+DBT_PROJECT_DIR = None
+for path in dbt_candidates:
+    if path.exists():
+        DBT_PROJECT_DIR = path
+        break
+
+if not DBT_PROJECT_DIR:
+    raise FileNotFoundError("dbt folder not found")
