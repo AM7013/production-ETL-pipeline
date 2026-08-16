@@ -30,7 +30,7 @@ QUALITY_THRESHOLD = float(os.getenv("QUALITY_THRESHOLD", "80.0"))
 
 # Prefect Cloud API URL - must be set via .env, no real workspace ID committed here
 PREFECT_API_URL = os.getenv("PREFECT_API_URL", "")
-
+DBT_PATH = PROJECT_ROOT / "DBT" / "pipeline_dbt"
 
 def get_postgres_url() -> str:
     return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
