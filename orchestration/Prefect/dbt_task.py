@@ -4,10 +4,10 @@ import subprocess
 from prefect import task
 
 # Get the project root (where Prefect/ and DBT/ are both located)
-PROJECT_ROOT = Path(__file__).parent.parent  # Goes up one level from Prefect/
+PROJECT_ROOT = Path(__file__).parent.parent.parent  # Goes up one level from Prefect/
 DBT_PATH = PROJECT_ROOT / "DBT" / "pipeline_dbt"
 
-@task(name="Run dbt models")
+@task(name="Run dbt models", log_prints=True)
 def run_dbt_models():
     """Run dbt models."""
     if not DBT_PATH.exists():
@@ -31,7 +31,7 @@ def run_dbt_models():
         raise RuntimeError(f"dbt run failed (exit {result.returncode})")
     return result.stdout
 
-@task(name="Test dbt models")
+@task(name="Test dbt models", log_prints=True)
 def test_dbt_models():
     """Run dbt tests."""
     if not DBT_PATH.exists():
