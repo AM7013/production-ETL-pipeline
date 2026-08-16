@@ -53,9 +53,9 @@ else:
 
 
 dbt_candidates = [
-    PROJECT_ROOT / "DBT" / "pipeline_dbt",
     PROJECT_ROOT / "dbt",
 ]
+
 DBT_PATH = None
 for path in dbt_candidates:
     if path.exists():
