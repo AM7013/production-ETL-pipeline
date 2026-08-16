@@ -192,7 +192,12 @@ Most data pipelines:
 - Proper CI/CD with manual approval gates and deployment tagging dramatically increases confidence in production deployments
 - Cloud warehousing best practices (partitioning + clustering) have a massive impact on both cost and query performance
 
+## Sample Data
 
+Data files (`cleaned_data_v1.csv`, `cleaned_data_test.csv`) are excluded 
+from this repository via `.gitignore` and are not committed to version 
+control. CI/CD uses a local sample file for smoke-testing the pipeline; 
+this file is not included in the public repo but included in local and cloud as a real production-grade.
 
 ---
 ## Documentation
