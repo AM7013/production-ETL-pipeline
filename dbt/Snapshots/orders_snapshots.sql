@@ -1,11 +1,11 @@
-{% snapshot orders_snapshots %}
+{% snapshot orders %}
 
 {{
     config(
         target_schema='snapshots',
-        unique_key='"OrderID"',
-        strategy='timestamp',
-        updated_at='OrderDate'
+        unique_key= '"OrderID"',
+        strategy= 'check',
+        check_cols=['"Status"']
     )
 }}
 
