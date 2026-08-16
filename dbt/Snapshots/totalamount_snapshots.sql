@@ -1,11 +1,11 @@
-{% snapshot totalamount_snapshots %}
+{% snapshot TotalAmount %}
 
 {{
     config(
         target_schema='snapshots',
         unique_key= '"OrderID"',
-        strategy='timestamp',
-        updated_at = '"OrderDate"',
+        strategy= 'check',
+        check_cols=['"Status"'],
         post_hook=[
             "grant select on {{ this }} to postgres",
             "comment on table {{ this }} is 'UPDATED by dbt'"
