@@ -46,6 +46,7 @@ jobs:
         env:
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_DEV }}
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
+          CSV_FILENAME: cleaned_data_test.csv
         run: |
           echo "[INFO] Starting Prefect flow in production... "
           python run_cd.py  
