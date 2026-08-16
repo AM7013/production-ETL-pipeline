@@ -5,7 +5,8 @@ from prefect import task
 
 # Get the project root (where Prefect/ and DBT/ are both located)
 PROJECT_ROOT = Path(__file__).parent.parent.parent  # Goes up one level from Prefect/
-DBT_PATH = PROJECT_ROOT / "DBT" / "pipeline_dbt"
+DBT_PATH = PROJECT_ROOT / "dbt"
+
 
 @task(name="Run dbt models", log_prints=True)
 def run_dbt_models():
