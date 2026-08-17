@@ -80,7 +80,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
-            perfect-shell \
+            prefect-shell \
             python-dotenv
 
       - name: Run prefect flow (TAGGING)

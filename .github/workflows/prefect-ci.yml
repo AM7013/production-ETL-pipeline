@@ -47,7 +47,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
-            perfect-shell \
+            prefect-shell \
             python-dotenv
 
       - name: Check Prefect Flow Import
@@ -81,7 +81,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
-            perfect-shell \
+            prefect-shell \
             python-dotenv
 
       
@@ -208,7 +208,7 @@ jobs:
             prefect \
             pyspark \
             psycopg2-binary \
-            perfect-shell \
+            prefect-shell \
             python-dotenv
 
       - name: Set up Docker Buildx
