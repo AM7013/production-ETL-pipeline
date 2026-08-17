@@ -55,7 +55,7 @@ jobs:
           python -c '
           import sys
           import os
-          sys.path.insert(0, os.path.join(os.getcwd(), "Prefect"))
+          sys.path.insert(0, os.path.join(os.getcwd(), "orchestration", "Prefect"))
 
           
           from etl_flow import etl_pipeline
@@ -234,7 +234,7 @@ jobs:
           python -c "
           import sys
           import os
-          sys.path.insert(0, os.getcwd())
+          sys.path.insert(0, os.path.join(os.getcwd(), "orchestration", "Prefect"))
           from etl_flow import etl_pipeline
 
           if not os.getenv('DB_CONNECTION_STRING'):
