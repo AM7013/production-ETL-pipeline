@@ -305,15 +305,18 @@ jobs:
         run: |
           # Create Dockerfile inline (no path issues!)
           cat > Dockerfile << 'EOF'
-          FROM python:3.13-slim
+          FROM python:3.13-slim-bullseye
           WORKDIR /app
+
+          # Java 17 is available in bullseye
           RUN apt-get update && apt-get install -y openjdk-17-jre-headless && rm -rf /var/lib/apt/lists/*
+
           COPY requirements.txt .
           RUN pip install --no-cache-dir -r requirements.txt pandas pandas-gbq prefect pyspark psycopg2-binary prefect-shell python-dotenv
+
           COPY . .
           ENV PYTHONPATH="${PYTHONPATH}:/app/orchestration/Prefect"
           CMD ["python", "-c", "from etl_flow import etl_pipeline; etl_pipeline()"]
-          EOF
           
           # Build and scan
           docker build -t prefect-etl:latest .
