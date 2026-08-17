@@ -22,9 +22,7 @@ RUN pip install --no-cache-dir \
     python-dotenv \
     prefect-shell
 
-# Copy real folders, not individual files - etl_flow.py needs config.py
-# and dbt_task.py sitting next to it, and dbt_task.py climbs 3 parents
-# to reach dbt/. Flattening breaks both relationships.
+
 COPY orchestration/ ./orchestration/
 COPY dbt/ ./dbt/
 

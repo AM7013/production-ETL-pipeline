@@ -279,6 +279,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./orchestration/Docker/Dockerfile
           push: false
           tags: prefect-etl:latest
           cache-from: type=gha
