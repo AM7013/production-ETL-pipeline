@@ -55,7 +55,7 @@ jobs:
           python -c '
           import sys
           import os
-          sys.path.insert(0, os.path.join(os.getcwd(), "orchestration", "Prefect"))
+          sys.path.insert(0, os.path.join(os.getcwd(), 'orchestration', 'Prefect'))
 
           
           from etl_flow import etl_pipeline
@@ -90,7 +90,7 @@ jobs:
           python -c "
           import sys
           import os
-          sys.path.insert(0, os.path.join(os.getcwd(), "orchestration", "Prefect"))
+          sys.path.insert(0, os.path.join(os.getcwd(), 'orchestration', 'Prefect'))
           
           from etl_flow import etl_pipeline
           etl_pipeline(target_date='2027-01-01', dry_run=True)
@@ -157,7 +157,7 @@ jobs:
           python -c "
           import sys
           import os
-          sys.path.extend([os.getcwd(), os.path.join(os.getcwd(), 'Prefect'), os.path.join(os.getcwd(), 'prefect')])
+          sys.path.insert(0, os.path.join(os.getcwd(), 'orchestration', 'Prefect'))
           
           import pandas as pd
           import logging
@@ -234,7 +234,7 @@ jobs:
           python -c "
           import sys
           import os
-          sys.path.insert(0, os.path.join(os.getcwd(), "orchestration", "Prefect"))
+          sys.path.insert(0, os.path.join(os.getcwd(), 'orchestration', 'Prefect'))
           from etl_flow import etl_pipeline
 
           if not os.getenv('DB_CONNECTION_STRING'):
