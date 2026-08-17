@@ -302,6 +302,10 @@ jobs:
           trivy --version
 
       - name: Trivy (Docker Scan)
+                uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./orchestration/Docker/Dockerfile
         run: |
           docker build -t prefect-etl:latest .
           trivy image \
