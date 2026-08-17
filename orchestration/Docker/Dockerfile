@@ -7,7 +7,6 @@ RUN mkdir -p /usr/share/man/man1 && \
     rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-
 ENV JAVA_OPTS="--add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
 
 WORKDIR /opt/prefect
@@ -20,7 +19,15 @@ RUN pip install --no-cache-dir \
     "pandas-gbq>=0.20.0" \
     "pyspark>=4.1.3" \
     psycopg2-binary \
-    python-dotenv
-COPY etl_flow.py .
+    python-dotenv \
+    prefect-shell
 
-ENV PYTHONPATH=/opt/prefect
+# Copy real folders, not individual files - etl_flow.py needs config.py
+# and dbt_task.py sitting next to it, and dbt_task.py climbs 3 parents
+# to reach dbt/. Flattening breaks both relationships.
+COPY orchestration/ ./orchestration/
+COPY dbt/ ./dbt/
+
+ENV PYTHONPATH=/opt/prefect/orchestration/Prefect
+
+WORKDIR /opt/prefect/orchestration/Prefect
