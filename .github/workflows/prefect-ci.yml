@@ -302,7 +302,7 @@ jobs:
           trivy --version
 
       - name: Trivy (Docker Scan)
-                uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./orchestration/Docker/Dockerfile
