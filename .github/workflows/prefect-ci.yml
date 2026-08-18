@@ -14,6 +14,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
+      - name: Create dbt profile for pipeline_dbt
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          pipeline_dbt:
+            target: dev_local
+            outputs:
+              dev_local:
+                type: postgres
+                host: localhost
+                port: 5432
+                user: postgres
+                password: AM
+                dbname: postgres
+                schema: public
+                threads: 4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
