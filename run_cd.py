@@ -1,7 +1,7 @@
 import sys
 import os
 from pathlib import Path
-
+import subprocess
 
 print("=" * 60)
 print("🚀 CD Pipeline - Production ETL")
