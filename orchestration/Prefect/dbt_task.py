@@ -4,7 +4,7 @@ import subprocess
 from prefect import task
 
 # From orchestration/Prefect/dbt_task.py → go up to repo root
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DBT_PATH = PROJECT_ROOT / "dbt"
 
 @task(name="Run dbt models", log_prints=True)
