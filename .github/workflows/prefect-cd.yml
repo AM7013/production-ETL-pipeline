@@ -76,11 +76,11 @@ jobs:
             outputs:
               dev_local:
                 type: postgres
-                host: localhost
+                host: ${{ secrets.DB_HOST }}
                 port: 5432
-                user: postgres
-                password: AM
-                dbname: postgres
+                user: ${{ secrets.DB_USER }}
+                password: ${{ secrets.DB_PASSWORD }}
+                dbname: ${{ secrets.DB_NAME }}
                 schema: public
                 threads: 4
           EOF
