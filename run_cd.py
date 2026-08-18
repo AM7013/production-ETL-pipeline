@@ -2,14 +2,12 @@ import sys
 import os
 from pathlib import Path
 import subprocess
-import config
 
 print("=" * 60)
 print("🚀 CD Pipeline - Production ETL")
 print("=" * 60)
 
-csv_name = os.getenv("CSV_FILENAME", config.CSV_FILENAME)
-csv_path = PROJECT_ROOT / "samples" / csv_name
+csv_path = PROJECT_ROOT / "samples" / "cleaned_data_test.csv"
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DBT_PATH = PROJECT_ROOT / "dbt"
@@ -20,8 +18,7 @@ print(f"Working Directory: {root_dir}")
 print(f"[CD] Using CSV: {csv_path}")
 if not csv_path.exists():
     raise FileNotFoundError(f"CSV not found: {csv_path}")
-
-
+    
 # Find the Prefect folder
 print(f"[DEBUG] Checking: {(root_dir / 'orchestration' / 'Prefect' / 'etl_flow.py')}")
 print(f"[DEBUG] Exists?: {(root_dir / 'orchestration' / 'Prefect' / 'etl_flow.py').exists()}")
