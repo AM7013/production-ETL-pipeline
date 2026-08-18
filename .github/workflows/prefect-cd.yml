@@ -16,47 +16,66 @@ jobs:
       - name: Request approval
         run: echo "[WAITING] Approval required to deploy Prefect ETL Pipeline to production..."
         
-  deploy:
-    needs: approval
-    runs-on: ubuntu-latest
-    environment: dev
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+deploy:
+  needs: approval
+  runs-on: ubuntu-latest
+  environment: dev
+  if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.13
+    - name: Create dbt profile for pipeline_dbt
+      run: |
+        mkdir -p ~/.dbt
+        cat > ~/.dbt/profiles.yml << 'EOF'
+        pipeline_dbt:
+          target: dev_local
+          outputs:
+            dev_local:
+              type: postgres
+              host: ${{ secrets.DB_HOST }}
+              port: 5432
+              user: ${{ secrets.DB_USER }}
+              password: ${{ secrets.DB_PASSWORD }}
+              dbname: ${{ secrets.DB_NAME }}
+              schema: public
+              threads: 4
+        EOF
+        echo "✅ dbt profile 'pipeline_dbt' created"
 
-      - name: Install dependencies
-        run: |
-          pip install --no-cache-dir -r requirements.txt \
-            pandas \
-            pandas-gbq \
-            prefect \
-            prefect-shell \
-            pyspark \
-            psycopg2-binary \
-            python-dotenv \
-            dbt-core \
-            dbt-postgres
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.13
 
+    - name: Install dependencies
+      run: |
+        pip install --no-cache-dir -r requirements.txt \
+          pandas \
+          pandas-gbq \
+          prefect \
+          prefect-shell \
+          pyspark \
+          psycopg2-binary \
+          python-dotenv \
+          dbt-core \
+          dbt-postgres
 
-      - name: Run Prefect Flow
-        env:
-          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_DEV }}
-          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-          CSV_FILENAME: cleaned_data_test.csv
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: |
-          echo "[INFO] Starting Prefect flow in production... "
-          python run_cd.py  
+    - name: Run Prefect Flow
+      env:
+        PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_DEV }}
+        PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
+        CSV_FILENAME: cleaned_data_test.csv
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+      run: |
+        echo "[INFO] Starting Prefect flow in production... "
+        python run_cd.py
 
+        
   deploy-tag:
     needs: deploy
     runs-on: ubuntu-latest
