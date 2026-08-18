@@ -118,8 +118,12 @@ jobs:
         env:
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_PROD }}
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
+          CSV_FILENAME: cleaned_data_test.csv
         run: |
-          echo "[INFO] Starting Prefect flow in production... "
+          echo "[INFO] Starting Prefect flow for tagging..."
+          # ensure sample file is visible
+          ls -la samples || true
+          ls -la *.csv || true
           python run_cd.py --tag
         
       - name: Create Deployment Tag
