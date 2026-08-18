@@ -25,23 +25,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create dbt profile in dbt folder
+      - name: Create dbt profiles.yml
         run: |
-          cat > dbt/profiles.yml << 'EOF'
-pipeline_dbt:
-  target: dev_local
-  outputs:
-    dev_local:
-      type: postgres
-      host: localhost
-      port: 5432
-      user: postgres
-      password: AM
-      dbname: postgres
-      schema: public
-      threads: 4
-EOF
-          echo "✅ dbt profile created at dbt/profiles.yml"
+          mkdir -p dbt
+          cat > dbt/profiles.yml << EOF
+          pipeline_dbt:
+            target: ci
+            outputs:
+              ci:
+                type: postgres
+                host: ${{ secrets.DB_HOST }}
+                port: 5432
+                user: ${{ secrets.DB_USER }}
+                password: ${{ secrets.DB_PASSWORD }}
+                dbname: ${{ secrets.DB_NAME }}
+                schema: public
+                threads: 4
+          EOF
+          echo "Created dbt/profiles.yml"
           cat dbt/profiles.yml
 
       - name: Set up Python
