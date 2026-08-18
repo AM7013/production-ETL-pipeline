@@ -2,13 +2,13 @@ import sys
 import os
 from pathlib import Path
 
-= PROJECT_ROOT / "dbt"
+
 print("=" * 60)
 print("🚀 CD Pipeline - Production ETL")
 print("=" * 60)
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DBT_PATH 
+DBT_PATH = PROJECT_ROOT / "dbt"
 
 root_dir = Path(os.getcwd())
 print(f"Working Directory: {root_dir}")
