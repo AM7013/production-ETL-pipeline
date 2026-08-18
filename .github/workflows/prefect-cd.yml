@@ -98,6 +98,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create dbt profiles.yml
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          mkdir -p dbt
+          cat > dbt/profiles.yml << EOF
+          pipeline_dbt:
+            target: ci
+            outputs:
+              ci:
+                type: postgres
+                host: "$DB_HOST"
+                port: 5432
+                user: "$DB_USER"
+                password: "$DB_PASSWORD"
+                dbname: "$DB_NAME"
+                schema: public
+                threads: 4
+                sslmode: require
+          EOF
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -112,20 +136,21 @@ jobs:
             pyspark \
             psycopg2-binary \
             prefect-shell \
-            python-dotenv
+            python-dotenv \
+            dbt-core \
+            dbt-postgres
 
       - name: Run prefect flow (TAGGING)
         env:
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_PROD }}
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
           CSV_FILENAME: cleaned_data_test.csv
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          echo "[INFO] Starting Prefect flow for tagging..."
-          # ensure sample file is visible
-          ls -la samples || true
-          ls -la *.csv || true
           python run_cd.py --tag
-        
       - name: Create Deployment Tag
         if: success()
         run: |
