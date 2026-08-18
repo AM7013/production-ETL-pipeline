@@ -1,8 +1,6 @@
 import sys
 import os
 from pathlib import Path
-import 
-from pathlib import Path
 
 = PROJECT_ROOT / "dbt"
 print("=" * 60)
