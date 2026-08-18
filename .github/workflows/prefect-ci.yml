@@ -14,10 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create dbt profile for pipeline_dbt
+      - name: Create dbt profiles.yml
         run: |
-          mkdir -p ~/.dbt
-          cat > ~/.dbt/profiles.yml << 'EOF'
+          mkdir -p dbt
+          cat > dbt/profiles.yml << EOF
           pipeline_dbt:
             target: dev_local
             outputs:
@@ -31,7 +31,8 @@ jobs:
                 schema: public
                 threads: 4
           EOF
-          echo "✅ dbt profile 'pipeline_dbt' created"
+          echo "Created dbt/profiles.yml"
+          cat dbt/profiles.yml
 
       - name: Set up Python
         uses: actions/setup-python@v5

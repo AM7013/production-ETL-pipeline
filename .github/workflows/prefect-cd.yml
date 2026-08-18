@@ -30,9 +30,9 @@ jobs:
           mkdir -p dbt
           cat > dbt/profiles.yml << EOF
           pipeline_dbt:
-            target: ci
+            target: dev_local
             outputs:
-              ci:
+              dev_local:
                 type: postgres
                 host: ${{ secrets.DB_HOST }}
                 port: 5432
