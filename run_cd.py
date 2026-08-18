@@ -7,11 +7,11 @@ print("=" * 60)
 print("🚀 CD Pipeline - Production ETL")
 print("=" * 60)
 
-csv_path = PROJECT_ROOT / "samples" / "cleaned_data_test.csv"
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DBT_PATH = PROJECT_ROOT / "dbt"
 
+csv_path = PROJECT_ROOT / "samples" / "cleaned_data_test.csv"
 root_dir = Path(os.getcwd())
 print(f"Working Directory: {root_dir}")
 
