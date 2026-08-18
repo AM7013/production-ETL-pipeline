@@ -14,25 +14,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+        
       - name: Create dbt profiles.yml
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         run: |
+          if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ] || [ -z "$DB_NAME" ]; then
+            echo "One or more DB secrets are missing"
+            exit 1
+          fi
+
           mkdir -p dbt
           cat > dbt/profiles.yml << EOF
           pipeline_dbt:
-            target: dev_local
+            target: ci
             outputs:
-              dev_local:
+              ci:
                 type: postgres
-                host: ${{ secrets.DB_HOST }}
+                host: "$DB_HOST"
                 port: 5432
-                user: ${{ secrets.DB_USER }}
-                password: ${{ secrets.DB_PASSWORD }}
-                dbname: ${{ secrets.DB_NAME }}
+                user: "$DB_USER"
+                password: "$DB_PASSWORD"
+                dbname: "$DB_NAME"
                 schema: public
                 threads: 4
+                sslmode: require
           EOF
+
           echo "Created dbt/profiles.yml"
-          cat dbt/profiles.yml
+          sed 's/password:.*/password: ****/' dbt/profiles.yml
 
       - name: Set up Python
         uses: actions/setup-python@v5
