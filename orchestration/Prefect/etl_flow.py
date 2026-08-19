@@ -26,7 +26,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
- 
+CSV_FILENAME
  
 @task(name="Log Pipeline Start")
 def log_start(run_id: str) -> None:
@@ -54,7 +54,7 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
  
     try:
         with time_tracking("Full ETL Pipeline"):
-            raw_data = extract_data(csv_filename="cleaned_data_test.csv")
+            raw_data = extract_data(csv_filename=config.CSV_FILENAME)
             profile_columns(raw_data)
  
             cleaned_data, quality_report = run_quality_checks(raw_data)
