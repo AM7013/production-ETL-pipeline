@@ -192,21 +192,46 @@ Most data pipelines:
 - Proper CI/CD with manual approval gates and deployment tagging dramatically increases confidence in production deployments
 - Cloud warehousing best practices (partitioning + clustering) have a massive impact on both cost and query performance
 
+
+## CI/CD Pipeline
+
+Two GitHub Actions workflows gate every change:
+
+**CI** (`prefect-ci.yml`) — runs on every push/PR to `master`:
+- Verifies the Prefect flow imports cleanly
+- Dry-run parameter validation
+- Data quality engine tested against mock data (including deliberately 
+  invalid rows, to confirm quarantine logic actually fires)
+- Docker image build
+- Security: CodeQL static analysis, Trivy container scan, TruffleHog 
+  secrets scan, pip-audit dependency scan
+
+**CD** (`prefect-cd.yml`) — triggers automatically once CI succeeds:
+- Manual approval gate before deployment
+- Runs the full pipeline (Spark → quality gate → Postgres → BigQuery → 
+  dbt run/test) against sample data
+- Tags the deployment with a version + date on success
+
+No secrets or real credentials are ever committed — all connection 
+details are injected via GitHub Actions secrets at runtime.
+
+
 ## Sample Data
 
 Data files (`cleaned_data_v1.csv`, `cleaned_data_test.csv`) are excluded 
 from this repository via `.gitignore` and are not committed to version 
 control. CI/CD uses a local sample file for smoke-testing the pipeline; 
-this file is not included in the public repo but included in local and cloud as a real production-grade.
+this file is not included in the public repo but included in source/local and cloud as a real production-grade.
 
 ---
 ## Documentation
 
 - [ETL-Pipeline](etl-pipeline/etl_pipeline.py)
-- [Data Tests](dbt/models/Tests/)
-- [Prefect Flow Documentation](orchestration/Prefect/etl_flow.py)
-- [CI/CD Pipeline Details](.github/workflows/)
-- [Sample Tests](samples/)
+- [Production Orchestration Flow](https://github.com/AM7013/production-ETL-pipeline/blob/master/orchestration/Prefect/etl_flow.py) — the Prefect flow actually run by CI/CD
+- [Modular Pipeline Components](https://github.com/AM7013/production-ETL-pipeline/blob/master/etl-pipeline/tasks) — reusable, independently-tested task modules (extraction, quality scoring, storage, tracking)
+- [dbt Project](https://github.com/AM7013/production-ETL-pipeline/blob/master/dbt) — models, snapshots, macros, and tests
+- [CI/CD Workflows](https://github.com/AM7013/production-ETL-pipeline/blob/master/.github/workflows)
+- [Sample Data](https://github.com/AM7013/production-ETL-pipeline/blob/master/samples)
 
 ---
 
@@ -239,6 +264,9 @@ this file is not included in the public repo but included in local and cloud as 
 - [x] Improve Quality Checks in etl_flow.py
 - [x] Fix hardcoded values
 - [x] Fix Monolithic script
+- [ ] Reconcile duplicate quality/extraction logic between `tasks/` and `orchestration/Prefect/etl_flow.py`
+- [ ] Full `dbt build` audit pass across all models/snapshots
+- [ ] Expand test coverage to the orchestration layer
 - [ ] Add CI/CD for DBT
 - [ ] Better CLI
 
