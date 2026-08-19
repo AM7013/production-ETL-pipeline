@@ -26,7 +26,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-CSV_FILENAME
+
  
 @task(name="Log Pipeline Start")
 def log_start(run_id: str) -> None:
