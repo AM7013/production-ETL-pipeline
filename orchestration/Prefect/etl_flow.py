@@ -11,7 +11,11 @@ from dbt_task import run_dbt_models, test_dbt_models
  
 # --- Wire up imports from the modular tasks/ library ---------------------
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+<<<<<<< HEAD
 _ETL_PIPELINE_DIR = _REPO_ROOT / "etl-pipeline"
+=======
+_ETL_PIPELINE_DIR = _REPO_ROOT / "Pipeline_building"
+>>>>>>> 35da853a6fc13e763165a52434cb7d3967f1bf64
 if str(_ETL_PIPELINE_DIR) not in sys.path:
     sys.path.insert(0, str(_ETL_PIPELINE_DIR))
  
