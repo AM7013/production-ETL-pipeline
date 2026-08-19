@@ -79,7 +79,7 @@ jobs:
         env:
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_DEV }}
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-          CSV_FILENAME: samples/cleaned_data_test.csv
+          CSV_FILENAME: ../samples/cleaned_data_test.csv
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -144,7 +144,7 @@ jobs:
         env:
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY_PROD }}
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-          CSV_FILENAME: cleaned_data_test.csv
+          CSV_FILENAME: ../samples/cleaned_data_test.csv
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
