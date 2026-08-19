@@ -54,7 +54,7 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
  
     try:
         with time_tracking("Full ETL Pipeline"):
-            raw_data = extract_data(csv_filename=config.CSV_FILENAME)
+            raw_data = extract_data(csv_filename="cleaned_data_test.csv")
             profile_columns(raw_data)
  
             cleaned_data, quality_report = run_quality_checks(raw_data)
