@@ -258,16 +258,16 @@ this file is not included in the public repo but included in source/local and cl
 - [x] Migrated orchestration from Airflow to Prefect Cloud
 - [x] Added comprehensive logging and monitoring
 - [x] Cost monitoring & optimization alerts
-- [x] Multi-environment support (dev/staging/prod)
+- [x] Multi-environment support (dev/prod)
 - [x] Deepening DBT
 - [x] Deepening BigQuery
 - [x] Improve Quality Checks in etl_flow.py
 - [x] Fix hardcoded values
 - [x] Fix Monolithic script
-- [ ] Reconcile duplicate quality/extraction logic between `tasks/` and `orchestration/Prefect/etl_flow.py`
-- [ ] Full `dbt build` audit pass across all models/snapshots
-- [ ] Expand test coverage to the orchestration layer
-- [ ] Add CI/CD for DBT
+- [x] Reconcile duplicate quality/extraction logic between `tasks/` and `orchestration/Prefect/etl_flow.py`
+- [x] Full `dbt build` audit pass across all models/snapshots
+- [x] Expand test coverage to the orchestration layer
+- [x] Add CI/CD for DBT
 - [ ] Better CLI
 
 ## Quick Start
