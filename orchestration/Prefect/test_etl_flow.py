@@ -5,9 +5,6 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
  
-# Same path-wiring etl_flow.py itself does - added explicitly here rather
-# than relying on pytest's implicit rootdir insertion, so this test file
-# works the same way regardless of which directory pytest is invoked from.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
  
 import etl_flow
@@ -22,96 +19,95 @@ def make_df(n: int = 3) -> pd.DataFrame:
  
 @pytest.fixture(autouse=True)
 def mock_everything(monkeypatch):
-    """
-    Mocks every external dependency the flow touches, so these tests
-    exercise only the flow's own branching logic - never Spark, never a
-    real DB, never a real dbt subprocess call.
-    """
+    """Mocks every external dependency so tests exercise only the flow's own branching logic."""
     monkeypatch.setattr(etl_flow, "log_start", MagicMock())
     monkeypatch.setattr(etl_flow, "extract_data", MagicMock(return_value=make_df()))
     monkeypatch.setattr(etl_flow, "profile_columns", MagicMock())
+    monkeypatch.setattr(etl_flow, "load_to_postgres", MagicMock())
     monkeypatch.setattr(etl_flow, "load_to_bigquery", MagicMock())
     monkeypatch.setattr(etl_flow, "run_dbt_models", MagicMock())
     monkeypatch.setattr(etl_flow, "test_dbt_models", MagicMock())
+    monkeypatch.setattr(etl_flow, "track_pipeline_run", MagicMock())
     monkeypatch.setattr(etl_flow, "stop_spark", MagicMock())
+    # time_tracking is a context manager; a plain MagicMock supports the
+    # `with ...:` protocol automatically, so this is safe to swap in as-is.
+    monkeypatch.setattr(etl_flow, "time_tracking", MagicMock())
  
  
-def test_dry_run_skips_all_real_work(monkeypatch):
+def _passing_report():
+    return {"passed": True, "quality_score": 95.0, "clean_rows": 3, "total_rows": 3}
+ 
+ 
+def _failing_report():
+    return {"passed": False, "quality_score": 40.0, "clean_rows": 1, "total_rows": 3}
+ 
+ 
+def test_dry_run_skips_all_real_work():
     etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=True)
  
     etl_flow.extract_data.assert_not_called()
+    etl_flow.load_to_postgres.assert_not_called()
     etl_flow.load_to_bigquery.assert_not_called()
     etl_flow.run_dbt_models.assert_not_called()
-    # dry_run returns before the try/finally block even starts, so
-    # stop_spark() correctly never runs either - nothing was ever started.
+    etl_flow.track_pipeline_run.assert_not_called()
     etl_flow.stop_spark.assert_not_called()
  
  
-def test_quality_pass_triggers_load_and_dbt(monkeypatch):
-    passing_report = {"passed": True, "quality_score": 95.0, "clean_rows": 3, "total_rows": 3}
-    monkeypatch.setattr(
-        etl_flow, "run_quality_checks",
-        MagicMock(return_value=(make_df(), passing_report))
-    )
+def test_quality_pass_triggers_both_loads_dbt_and_success_tracking(monkeypatch):
+    monkeypatch.setattr(etl_flow, "run_quality_checks", MagicMock(return_value=(make_df(), _passing_report())))
  
     etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
  
+    etl_flow.load_to_postgres.assert_called_once()
     etl_flow.load_to_bigquery.assert_called_once()
     etl_flow.run_dbt_models.assert_called_once()
     etl_flow.test_dbt_models.assert_called_once()
  
+    etl_flow.track_pipeline_run.assert_called_once()
+    args, kwargs = etl_flow.track_pipeline_run.call_args
+    assert args[-1] is True or kwargs.get("success") is True
  
-def test_quality_failure_skips_load_and_dbt(monkeypatch):
-    failing_report = {"passed": False, "quality_score": 40.0, "clean_rows": 1, "total_rows": 3}
-    monkeypatch.setattr(
-        etl_flow, "run_quality_checks",
-        MagicMock(return_value=(make_df(), failing_report))
-    )
+ 
+def test_quality_failure_skips_loads_and_dbt_but_still_tracks(monkeypatch):
+    monkeypatch.setattr(etl_flow, "run_quality_checks", MagicMock(return_value=(make_df(), _failing_report())))
  
     etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
  
+    etl_flow.load_to_postgres.assert_not_called()
     etl_flow.load_to_bigquery.assert_not_called()
     etl_flow.run_dbt_models.assert_not_called()
     etl_flow.test_dbt_models.assert_not_called()
  
+    # A failed run should still be recorded - failures matter for the
+    # audit trail just as much as successes do.
+    etl_flow.track_pipeline_run.assert_called_once()
+    args, kwargs = etl_flow.track_pipeline_run.call_args
+    assert args[-1] is False or kwargs.get("success") is False
  
-def test_load_to_bigquery_receives_a_run_id(monkeypatch):
-    passing_report = {"passed": True, "quality_score": 95.0, "clean_rows": 3, "total_rows": 3}
-    monkeypatch.setattr(
-        etl_flow, "run_quality_checks",
-        MagicMock(return_value=(make_df(), passing_report))
-    )
+ 
+def test_both_loads_receive_the_same_run_id(monkeypatch):
+    monkeypatch.setattr(etl_flow, "run_quality_checks", MagicMock(return_value=(make_df(), _passing_report())))
  
     etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
  
-    _, kwargs = etl_flow.load_to_bigquery.call_args
-    assert "run_id" in kwargs
-    assert isinstance(kwargs["run_id"], str)
-    assert len(kwargs["run_id"]) > 0
+    pg_kwargs = etl_flow.load_to_postgres.call_args.kwargs
+    bq_kwargs = etl_flow.load_to_bigquery.call_args.kwargs
+ 
+    assert pg_kwargs["run_id"] == bq_kwargs["run_id"]
+    assert isinstance(pg_kwargs["run_id"], str) and len(pg_kwargs["run_id"]) > 0
  
  
 def test_stop_spark_called_even_when_extract_fails(monkeypatch):
-    """
-    The finally block must release the SparkSession on failure, not just
-    on success - this was a real gap in earlier versions of this file.
-    """
-    monkeypatch.setattr(
-        etl_flow, "extract_data",
-        MagicMock(side_effect=RuntimeError("simulated extraction failure"))
-    )
+    monkeypatch.setattr(etl_flow, "extract_data", MagicMock(side_effect=RuntimeError("simulated failure")))
  
-    with pytest.raises(RuntimeError, match="simulated extraction failure"):
+    with pytest.raises(RuntimeError, match="simulated failure"):
         etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
  
     etl_flow.stop_spark.assert_called_once()
  
  
 def test_stop_spark_called_on_success_too(monkeypatch):
-    passing_report = {"passed": True, "quality_score": 95.0, "clean_rows": 3, "total_rows": 3}
-    monkeypatch.setattr(
-        etl_flow, "run_quality_checks",
-        MagicMock(return_value=(make_df(), passing_report))
-    )
+    monkeypatch.setattr(etl_flow, "run_quality_checks", MagicMock(return_value=(make_df(), _passing_report())))
  
     etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
  
