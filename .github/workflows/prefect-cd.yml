@@ -84,7 +84,9 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp-key.json
         run: |
+          echo '${{ secrets.GCP_KEY }}' > gcp-key.json
           echo "[INFO] Starting Prefect flow in production... "
           python run_cd.py
 
@@ -149,8 +151,12 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp-key.json
+          
         run: |
+          echo '${{ secrets.GCP_KEY }}' > gcp-key.json
           python run_cd.py --tag
+          
       - name: Create Deployment Tag
         if: success()
         run: |
