@@ -5,3 +5,4 @@ __pycache__
 *.log
 quarantine_zone.csv
 cleaned_data_v1.csv
+dbt_packages
