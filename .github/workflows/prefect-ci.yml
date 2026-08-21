@@ -83,6 +83,12 @@ jobs:
             prefect-shell \
             python-dotenv
 
+      - name: install dbt packages
+        run: |
+          cd dbt
+          dbt deps
+          dbt build --target ci
+
       - name: Check Prefect Flow Import
         run: |
           python -c '
