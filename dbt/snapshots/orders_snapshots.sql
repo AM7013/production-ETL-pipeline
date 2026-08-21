@@ -12,7 +12,7 @@
 select
     *,
     CAST("OrderDate" AS DATE) AS OrderDate  
-from {{ source('public', 'test') }}
+from {{ source('public', 'orders') }}
 
 
 
