@@ -20,7 +20,7 @@ select
     "Quantity",
     "UnitPrice",
     CASE
-        WHEN "TotalAmount" ~ '^[0-9]+\.?[0-9]*$' THEN "TotalAmount"::NUMERIC
+        WHEN "TotalAmount"::text ~ '^[0-9]+\.?[0-9]*$' THEN "TotalAmount"
         ELSE NULL
     END AS "TotalAmount",
     "OrderDate",
