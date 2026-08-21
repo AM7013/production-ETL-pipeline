@@ -36,5 +36,4 @@ models:
       +materialized: view
     
     +post-hook:
-      - "grant select on {{ this }} to postgres" #just testing the grant/to
       - "comment on table {{ this }} is 'UPDATED by dbt'"

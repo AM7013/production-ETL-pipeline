@@ -6,3 +6,4 @@ __pycache__
 quarantine_zone.csv
 cleaned_data_v1.csv
 dbt_packages
+target/

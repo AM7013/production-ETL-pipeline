@@ -2,7 +2,6 @@
     
     materialized='incremental',
     post_hook=[
-        "grant select on {{ this }} to postgres",
         "comment on table {{ this }} is 'UPDATED by dbt'"
     ],
     unique_key= '"OrderID"'
@@ -28,7 +27,7 @@ select
     "Region",
     "Status",
     "Discount"
-from {{ source('public', 'test') }}
+from {{ source('public', 'orders') }}
 
 
 {% if is_incremental() %}
