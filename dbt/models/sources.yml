@@ -3,4 +3,4 @@ version: 2
 sources:
   - name: public
     tables:
-      - name: test
+      - name: orders

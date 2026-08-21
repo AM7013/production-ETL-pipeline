@@ -30,6 +30,7 @@ select
 from {{ source('public', 'orders') }}
 
 
+
 {% if is_incremental() %}
     where "OrderID" > (select max("OrderID") from {{ this }})
 {% endif %}
