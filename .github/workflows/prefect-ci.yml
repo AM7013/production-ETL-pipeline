@@ -78,10 +78,12 @@ jobs:
             pandas \
             pandas-gbq \
             prefect \
+            prefect-shell \
             pyspark \
             psycopg2-binary \
-            prefect-shell \
-            python-dotenv
+            python-dotenv \
+            dbt-core \
+            dbt-postgres
 
       - name: install dbt packages
         run: |
