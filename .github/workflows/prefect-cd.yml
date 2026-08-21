@@ -148,6 +148,12 @@ jobs:
             python-dotenv \
             dbt-core \
             dbt-postgres
+      
+      - name: install dbt packages
+        run: |
+          cd dbt
+          dbt deps
+          dbt build --target ci
 
       - name: Run prefect flow (TAGGING)
         env:
