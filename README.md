@@ -218,11 +218,27 @@ details are injected via GitHub Actions secrets at runtime.
 
 ## Sample Data
 
-Data files (`cleaned_data_v1.csv`, `cleaned_data_test.csv`) are excluded 
-from this repository via `.gitignore` and are not committed to version 
-control. CI/CD uses a local sample file for smoke-testing the pipeline; 
-this file is not included in the public repo but included in source/local and cloud as a real production-grade.
+This repository does **not** include full production datasets.
 
+| File | Purpose | Location |
+|------|---------|----------|
+| `cleaned_data_test.csv` | Small sample used by CI/CD smoke tests | `samples/` (or generated in Actions) |
+| `cleaned_data_v1.csv` | Full local/production-scale dataset (~500K rows) | Local / private only (gitignored) |
+
+**Why?**
+- Keeps the public repo lightweight
+- Avoids publishing large or sensitive raw data
+- Still allows full pipeline validation in CI/CD with a small test file
+
+To run locally with full data:
+1. Place `cleaned_data_v1.csv` in the expected data path
+2. Set `CSV_FILENAME=cleaned_data_v1.csv` in `.env`
+3. Run the pipeline
+
+CI/CD always uses the test sample via:
+```bash
+CSV_FILENAME=cleaned_data_test.csv
+```
 ---
 ## Documentation
 
