@@ -274,7 +274,7 @@ CSV_FILENAME=cleaned_data_test.csv
 - [x] Migrated orchestration from Airflow to Prefect Cloud
 - [x] Added comprehensive logging and monitoring
 - [x] Cost monitoring & optimization alerts
-- [x] Multi-environment support (dev/prod)
+- [x] Multi-environment support (dev/prod/staging)
 - [x] Deepening DBT
 - [x] Deepening BigQuery
 - [x] Improve Quality Checks in etl_flow.py
