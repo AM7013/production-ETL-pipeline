@@ -21,6 +21,10 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          STAGING_DB_HOST: ${{ secrets.STAGING_DB_HOST }}
+          STAGING_DB_USER: ${{ secrets.STAGING_DB_USER }}
+          STAGING_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+          STAGING_DB_NAME: ${{ secrets.STAGING_DB_NAME }}
         run: |
           if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ] || [ -z "$DB_NAME" ]; then
             echo "One or more DB secrets are missing"
@@ -39,6 +43,16 @@ jobs:
                 user: "$DB_USER"
                 password: "$DB_PASSWORD"
                 dbname: "$DB_NAME"
+                schema: public
+                threads: 4
+                sslmode: require
+              staging:
+                type: postgres
+                host: "{{ env_var('STAGING_DB_HOST') }}"
+                port: 5432
+                user: "{{ env_var('STAGING_DB_USER') }}"
+                password: "{{ env_var('STAGING_DB_PASSWORD') }}"
+                dbname: "{{ env_var('STAGING_DB_NAME') }}"
                 schema: public
                 threads: 4
                 sslmode: require
