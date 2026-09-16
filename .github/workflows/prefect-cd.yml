@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      workflows: write
+      actions: write
 
       
     environment: Production/Deployment
