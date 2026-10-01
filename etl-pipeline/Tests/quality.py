@@ -82,7 +82,6 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     if "Status" in pandas_df.columns:
         status_str = pandas_df["Status"].astype(str)
         mask = ~status_str.isin(ALLOWED_STATUSES) & ~status_str.str.contains(r"\{.*\}", na=False)
-        # also treat pure empty / nan as invalid
         mask = mask | status_str.isin(["", "nan", "None", "NaN"])
         _flag(mask, "invalid_status")
 
@@ -98,7 +97,6 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     if "Email" in pandas_df.columns:
         email = pandas_df["Email"].astype(str)
         mask = ~email.str.contains("@", na=False) & email.notna() & (email.str.strip() != "")
-        # don't double-count pure empties already caught above
         _flag(mask, "bad_email")
 
     # 6. Numeric non-negative checks
@@ -109,7 +107,7 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         mask = numeric.isna() | (numeric < 0)
         _flag(mask, f"bad_numeric:{col}")
 
-    # 7. Discount in a sensible range (accept 0–1 or 0–100)
+    # 7. Discount in a sensible range (accept 0-1 or 0-100)
     if "Discount" in pandas_df.columns:
         disc = pd.to_numeric(pandas_df["Discount"], errors="coerce")
         mask = disc.isna() | (disc < 0) | (disc > 100)
@@ -134,7 +132,6 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     if report["invalid_breakdown"]:
         logger.info(f"  • Breakdown  : {report['invalid_breakdown']}")
 
-    # Build a human-readable reason string per invalid row
     if invalid_rows > 0:
         reason_series = pd.Series("", index=pandas_df.index, dtype=object)
         for label, mask in reasons.items():
@@ -144,29 +141,36 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         bad_df = pandas_df.loc[invalid_mask].copy()
         bad_df["quarantine_reason"] = reason_series.loc[invalid_mask]
 
+        # FIX 1 (quarantine all-or-nothing): ALWAYS quarantine real invalid
+        # rows, regardless of whether the overall batch cleared the
+        # threshold. The old version only wrote this file when the WHOLE
+        # batch failed - so invalid rows sitting inside an otherwise-passing
+        # batch were silently dropped: not loaded, not quarantined, not
+        # logged anywhere retrievable. Every row that fails a check now
+        # lands here, every time, pass or fail.
+        try:
+            bad_df.to_csv(QUARANTINE_FILE, index=False)
+            logger.warning(f"[SENT] {invalid_rows:,} invalid row(s) quarantined to: {QUARANTINE_FILE}")
+        except OSError as e:
+            logger.error(f"[ERROR] Could not write quarantine file '{QUARANTINE_FILE}': {e}")
+
         if not report["passed"]:
-            logger.warning(
-                f"[STOP] Quality low ({quality_score:.1f}%) → Quarantine engaged "
-                f"({invalid_rows:,} invalid rows)."
-            )
-            try:
-                bad_df.to_csv(QUARANTINE_FILE, index=False)
-                logger.warning(f"[SENT] Quarantine saved to: {QUARANTINE_FILE}")
-            except OSError as e:
-                logger.error(f"[ERROR] Could not write quarantine file '{QUARANTINE_FILE}': {e}")
+            logger.warning(f"[STOP] Quality low ({quality_score:.1f}%) → pipeline halted.")
         else:
-            # Quality still passed overall, but we log that some rows were dirty
             logger.info(
-                f"[INFO] {invalid_rows:,} rows had quality issues but overall score "
-                f"still met threshold."
+                f"[INFO] {invalid_rows:,} rows quarantined but overall score "
+                f"still met threshold - clean rows proceed."
             )
     else:
         logger.info("[OK] Data Quality checks passed successfully.")
 
-    # Return only the clean rows when we pass (so downstream never sees dirty data).
-    # On failure we still return the original frame so callers can inspect it.
-    if report["passed"]:
-        clean_df = pandas_df.loc[~invalid_mask].copy()
-        return clean_df, report
-
-    return pandas_df, report
+    # FIX 2 (inconsistent return on failure): ALWAYS return only the clean
+    # rows - never the raw, unvalidated frame. The old version returned the
+    # FULL original DataFrame (dirty rows included) on failure, which was
+    # inconsistent with the passing-batch behavior (clean rows only) and a
+    # landmine: any future caller that used this return value without first
+    # checking report["passed"] would silently load unvalidated data. The
+    # contract is now simple and always true: the first return value is
+    # clean rows, full stop, whether the batch passed or failed.
+    clean_df = pandas_df.loc[~invalid_mask].copy()
+    return clean_df, report
