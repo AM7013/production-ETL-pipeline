@@ -284,7 +284,8 @@ CSV_FILENAME=cleaned_data_test.csv
 - [x] Full `dbt build` audit pass across all models/snapshots
 - [x] Expand test coverage to the orchestration layer
 - [x] Add CI/CD for DBT
-- [ ] Better CLI
+- [x] Fixed Quality issues on Quarantine
+- [ ] CLI
 
 ## Quick Start
 ``` bash
