@@ -286,6 +286,8 @@ CSV_FILENAME=cleaned_data_test.csv
 - [x] Add CI/CD for DBT
 - [x] Fixed Quality issues on Quarantine
 - [ ] Add Better CLI
+- [ ] Add a second dbt profile for BigQuery
+- [ ] Add Terraform
 
 ## Quick Start
 ``` bash
