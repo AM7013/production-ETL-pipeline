@@ -285,7 +285,7 @@ CSV_FILENAME=cleaned_data_test.csv
 - [x] Expand test coverage to the orchestration layer
 - [x] Add CI/CD for DBT
 - [x] Fixed Quality issues on Quarantine
-- [ ] CLI
+- [ ] Add Better CLI
 
 ## Quick Start
 ``` bash
