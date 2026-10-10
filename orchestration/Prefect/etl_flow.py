@@ -6,12 +6,13 @@ from typing import Optional
  
 from prefect import flow, task
 from prefect_shell import shell_run_command  # noqa: F401 (kept for future shell-based dbt/ops tasks)
- 
+from prefect.events import emit_event
+
 from dbt_task import run_dbt_models, test_dbt_models
  
 # --- Wire up imports from the modular tasks/ library ---------------------
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_ETL_PIPELINE_DIR = _REPO_ROOT / "etl-pipeline"
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_ETL_PIPELINE_DIR = _REPO_ROOT / "Pipeline_building"
 if str(_ETL_PIPELINE_DIR) not in sys.path:
     sys.path.insert(0, str(_ETL_PIPELINE_DIR))
  
@@ -26,7 +27,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
+ 
  
 @task(name="Log Pipeline Start")
 def log_start(run_id: str) -> None:
@@ -58,6 +59,17 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
             profile_columns(raw_data)
  
             cleaned_data, quality_report = run_quality_checks(raw_data)
+
+            invalid = quality_report.get("invalid_rows", 0)
+            if invalid > 0:
+                emit_event(
+                    event="etl.quarantine.rows",
+                    resource={"prefect.resource.id": f"etl.run.{run_id}"},
+                    payload={
+                        "invalid_rows": invalid,
+                        "quality_score": quality_report.get("quality_score"),
+                    },
+                )
  
             if quality_report["passed"]:
                 load_to_postgres(cleaned_data, run_id=run_id)
@@ -77,6 +89,6 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
         # or raised an exception - Spark always gets released.
         stop_spark()
  
- 
+
 if __name__ == "__main__":
     etl_pipeline(target_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
