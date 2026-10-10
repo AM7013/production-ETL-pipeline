@@ -33,11 +33,19 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
 );
 """
 
+_ADD_QUALITY_COLUMNS = """
+ALTER TABLE pipeline_runs
+    ADD COLUMN IF NOT EXISTS quality_score NUMERIC(5,1),
+    ADD COLUMN IF NOT EXISTS invalid_rows INTEGER;
+"""
+
 _INSERT_RUN = """
-INSERT INTO pipeline_runs (run_id, table_name, row_count, success, recorded_at)
-VALUES (:run_id, :table_name, :row_count, :success, :recorded_at)
+INSERT INTO pipeline_runs (run_id, table_name, row_count, success, recorded_at, quality_score, invalid_rows)
+VALUES (:run_id, :table_name, :row_count, :success, :recorded_at, :quality_score, :invalid_rows)
 ON CONFLICT (run_id) DO NOTHING;
 """
+
+
 
 
 def _get_engine() -> Engine:
@@ -59,11 +67,12 @@ def time_tracking(label: str = "Pipeline"):
         logger.info(f"[TIME] {label} took {elapsed:.3f}s")
 
 
-def track_pipeline_run(run_id: str, table_name: str, row_count: int, success: bool = True) -> None:
+def track_pipeline_run(run_id: str, table_name: str, row_count: int, success: bool = True, quality_score: float = None, invalid_rows: int = None) -> None:
     try:
         engine = _get_engine()
         with engine.connect() as conn:
             conn.execute(text(_CREATE_RUNS_TABLE))
+            conn.execute(text(_ADD_QUALITY_COLUMNS)) 
             conn.execute(
                 text(_INSERT_RUN),
                 {
@@ -72,6 +81,8 @@ def track_pipeline_run(run_id: str, table_name: str, row_count: int, success: bo
                     "row_count": row_count,
                     "success": success,
                     "recorded_at": datetime.now(timezone.utc),
+                    "quality_score": quality_score,
+                    "invalid_rows": invalid_rows,
                 },
             )
             conn.commit()
