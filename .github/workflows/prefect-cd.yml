@@ -87,7 +87,7 @@ jobs:
             prefect-shell \
             pyspark \
             psycopg2-binary \
-            "psycopg[binary]"
+            "psycopg[binary]" \
             python-dotenv \
             dbt-core \
             dbt-postgres
