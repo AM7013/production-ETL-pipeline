@@ -13,6 +13,7 @@ DBT_PATH = PROJECT_ROOT / "dbt"
 
 csv_path = PROJECT_ROOT / "samples" / "cleaned_data_test.csv"
 root_dir = Path(os.getcwd())
+os.environ["CSV_FILENAME"] = str(csv_path)
 print(f"Working Directory: {root_dir}")
 
 print(f"[CD] Using CSV: {csv_path}")
