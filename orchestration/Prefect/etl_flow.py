@@ -70,6 +70,7 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
                         "quality_score": quality_report.get("quality_score"),
                     },
                 )
+
  
             if quality_report["passed"]:
                 load_to_postgres(cleaned_data, run_id=run_id)
@@ -78,12 +79,18 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
                 logger.info("[WAIT] Triggering downstream dbt models...")
                 run_dbt_models()
                 test_dbt_models()
+
+                quality_score=quality_report.get("quality_score"),
+                invalid_rows=quality_report.get("invalid_rows"),
  
                 track_pipeline_run(run_id, config.TABLE_NAME, quality_report["clean_rows"], success=True)
                 logger.info(f"[{datetime.now(timezone.utc)}] [FINISH] Pipeline Completed Successfully!")
             else:
                 track_pipeline_run(run_id, config.TABLE_NAME, quality_report.get("clean_rows", 0), success=False)
                 logger.warning("[SKIP] Skipping load because quality check failed")
+
+                quality_score=quality_report.get("quality_score"),
+                invalid_rows=quality_report.get("invalid_rows"),
     finally:
         # Runs whether the try block succeeded, failed the quality gate,
         # or raised an exception - Spark always gets released.
