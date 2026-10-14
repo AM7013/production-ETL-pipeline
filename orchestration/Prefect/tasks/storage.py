@@ -27,10 +27,12 @@ _engine: Engine = None
 NATURAL_KEY = "OrderID"
 
 
+
 def _get_engine() -> Engine:
     global _engine
     if _engine is None:
-        _engine = create_engine(get_postgres_url(), hide_parameters=True)
+        url = get_postgres_url().replace("postgresql://", "postgresql+psycopg2://", 1)
+        _engine = create_engine(url, hide_parameters=True)
     return _engine
 
 
