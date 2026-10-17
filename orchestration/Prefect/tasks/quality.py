@@ -139,18 +139,21 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
                 f"[STOP] Quality low ({quality_score:.1f}%) → Quarantine engaged "
                 f"({invalid_rows:,} invalid rows)."
             )
-            try:
-                bad_df.to_csv(QUARANTINE_FILE, index=False)
-                logger.warning(f"[SENT] Quarantine saved to: {QUARANTINE_FILE}")
-            except OSError as e:
-                logger.error(f"[ERROR] Could not write quarantine file '{QUARANTINE_FILE}': {e}")
+                    try:
+            bad_df.to_csv(QUARANTINE_FILE, index=False)
+            logger.warning(f"[SENT] {invalid_rows:,} invalid row(s) quarantined to: {QUARANTINE_FILE}")
+        except OSError as e:
+            logger.error(f"[ERROR] Could not write quarantine file '{QUARANTINE_FILE}': {e}")
+
+        if not report["passed"]:
+            logger.warning(f"[STOP] Quality low ({quality_score:.1f}%) → pipeline halted.")
         else:
-            logger.info(
-                f"[INFO] {invalid_rows:,} rows had quality issues but overall score "
-                f"still met threshold."
-            )
+            logger.info(f"[INFO] {invalid_rows:,} rows quarantined but overall score still met threshold - clean rows proceed.")
     else:
         logger.info("[OK] Data Quality checks passed successfully.")
+
+    clean_df = pandas_df.loc[~invalid_mask].copy()
+    return clean_df, report
 
     if report["passed"]:
         clean_df = pandas_df.loc[~invalid_mask].copy()

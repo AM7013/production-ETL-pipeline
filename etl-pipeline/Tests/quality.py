@@ -157,12 +157,12 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         if not report["passed"]:
             logger.warning(f"[STOP] Quality low ({quality_score:.1f}%) → pipeline halted.")
         else:
-            logger.info(
-                f"[INFO] {invalid_rows:,} rows quarantined but overall score "
-                f"still met threshold - clean rows proceed."
-            )
+            logger.info(f"[INFO] {invalid_rows:,} rows quarantined but overall score still met threshold - clean rows proceed.")
     else:
         logger.info("[OK] Data Quality checks passed successfully.")
+
+    clean_df = pandas_df.loc[~invalid_mask].copy()
+    return clean_df, report
 
     # FIX 2 (inconsistent return on failure): ALWAYS return only the clean
     # rows - never the raw, unvalidated frame. The old version returned the
