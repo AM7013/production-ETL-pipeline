@@ -134,12 +134,7 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         bad_df = pandas_df.loc[invalid_mask].copy()
         bad_df["quarantine_reason"] = reason_series.loc[invalid_mask]
 
-        if not report["passed"]:
-            logger.warning(
-                f"[STOP] Quality low ({quality_score:.1f}%) → Quarantine engaged "
-                f"({invalid_rows:,} invalid rows)."
-            )
-                    try:
+        try:
             bad_df.to_csv(QUARANTINE_FILE, index=False)
             logger.warning(f"[SENT] {invalid_rows:,} invalid row(s) quarantined to: {QUARANTINE_FILE}")
         except OSError as e:
@@ -154,9 +149,3 @@ def run_quality_checks(pandas_df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
 
     clean_df = pandas_df.loc[~invalid_mask].copy()
     return clean_df, report
-
-    if report["passed"]:
-        clean_df = pandas_df.loc[~invalid_mask].copy()
-        return clean_df, report
-
-    return pandas_df, report
