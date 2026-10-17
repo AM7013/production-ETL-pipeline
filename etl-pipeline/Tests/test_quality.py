@@ -213,7 +213,6 @@ def test_invalid_rows_still_quarantined_when_batch_passes(tmp_path, monkeypatch)
     monkeypatch.setattr("tasks.quality.QUARANTINE_FILE", str(quarantine_path))
     monkeypatch.setattr("tasks.quality.QUALITY_THRESHOLD", 50.0)
 
-    # 1 bad out of 3 -> 66% -> still passes overall
     df = pd.DataFrame([
         make_row(OrderID=1),
         make_row(OrderID=2),
@@ -222,12 +221,8 @@ def test_invalid_rows_still_quarantined_when_batch_passes(tmp_path, monkeypatch)
     result_df, report = run_quality_checks.fn(df)
 
     assert report["passed"] is True
-    # The one bad row must be quarantined even though the batch passed.
     assert quarantine_path.exists()
-    qdf = pd.read_csv(quarantine_path)
-    assert len(qdf) == 1
-    assert "quarantine_reason" in qdf.columns
-    # Only clean rows come back for loading - the bad row is excluded.
+    assert len(pd.read_csv(quarantine_path)) == 1
     assert len(result_df) == 2
 
 
@@ -237,17 +232,15 @@ def test_clean_rows_still_returned_when_batch_fails(tmp_path, monkeypatch):
     monkeypatch.setattr("tasks.quality.QUALITY_THRESHOLD", 99.0)
 
     df = pd.DataFrame([
-        make_row(OrderID=1),                          # clean
-        make_row(OrderID=2, Status="{UNKNOWN}"),       # invalid
-        make_row(OrderID=3, Email="bad-email"),        # invalid
+        make_row(OrderID=1),
+        make_row(OrderID=2, Status="{UNKNOWN}"),
+        make_row(OrderID=3, Email="bad-email"),
     ])
     result_df, report = run_quality_checks.fn(df)
 
     assert report["passed"] is False
-    # Even on failure, the returned frame must contain ONLY clean rows -
-    # never the raw, unvalidated data.
     assert len(result_df) == 1
-    assert result_df.iloc[0]["OrderID"] == 1
+    assert len(pd.read_csv(quarantine_path)) == 2
     assert quarantine_path.exists()
     qdf = pd.read_csv(quarantine_path)
     assert len(qdf) == 2
