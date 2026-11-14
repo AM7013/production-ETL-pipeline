@@ -3,7 +3,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen" />
   <img src="https://img.shields.io/badge/Version-1.0.0-blue" />
-  <img src="https://img.shields.io/badge/Quality-97.5%25-brightgreen" />
   <img src="https://img.shields.io/badge/Records-500K%2B-blue" />
 </p>
 
@@ -276,14 +275,12 @@ CSV_FILENAME=cleaned_data_test.csv
 - [x] Added comprehensive logging and monitoring
 - [x] Cost monitoring & optimization alerts
 - [x] Multi-environment support (dev/prod/staging)
-- [x] Deepening DBT
-- [x] Deepening BigQuery
 - [x] Improve Quality Checks in etl_flow.py
 - [x] Fix hardcoded values
 - [x] Fix Monolithic script
 - [x] Reconcile duplicate quality/extraction logic between `tasks/` and `orchestration/Prefect/etl_flow.py`
 - [x] Full `dbt build` audit pass across all models/snapshots
-- [x] Expand test coverage to the orchestration layer
+- [x] Expand test coverage
 - [x] Add CI/CD for DBT
 - [x] Fixed Quality issues on Quarantine
 - [ ] Add Better CLI
