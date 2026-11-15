@@ -78,6 +78,12 @@ jobs:
         with:
           python-version: 3.13
 
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install dependencies
         run: |
           pip install --no-cache-dir -r requirements.txt \
@@ -97,6 +103,17 @@ jobs:
           cd dbt
           dbt deps
           dbt build --target ci
+
+      - name: Show Java and Spark versions
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          pip show pyspark | head -2
+
+      - name: Spark smoke test (real settings)
+        working-directory: orchestration/Prefect
+        run: |
+          python -c "from tasks.ingestion import _get_spark, stop_spark; s = _get_spark(); print('spark', s.version); stop_spark()"
 
       - name: Run Prefect Flow
         env:
@@ -176,6 +193,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.13
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Install dependencies
         run: |
