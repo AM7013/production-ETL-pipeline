@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import time
@@ -23,16 +22,20 @@ def test_track_pipeline_run_success_creates_inserts_and_commits(monkeypatch):
     mock_engine.connect.return_value = mock_ctx
     monkeypatch.setattr(tracking, "_get_engine", lambda: mock_engine)
 
-    tracking.track_pipeline_run("run-123", "orders", 500, success=True)
+    tracking.track_pipeline_run(
+        "run-123", "orders", 500, success=True, quality_score=97.5, invalid_rows=13
+    )
 
-
-    assert mock_conn.execute.call_count == 2
-    insert_call = mock_conn.execute.call_args_list[1]
+    # CREATE TABLE, ALTER TABLE (quality columns), INSERT - in that order
+    assert mock_conn.execute.call_count == 3
+    insert_call = mock_conn.execute.call_args_list[-1]
     params = insert_call[0][1]
     assert params["run_id"] == "run-123"
     assert params["table_name"] == "orders"
     assert params["row_count"] == 500
     assert params["success"] is True
+    assert params["quality_score"] == 97.5
+    assert params["invalid_rows"] == 13
     mock_conn.commit.assert_called_once()
 
 
@@ -48,10 +51,13 @@ def test_track_pipeline_run_records_failure_correctly(monkeypatch):
 
     tracking.track_pipeline_run("run-456", "orders", 0, success=False)
 
-    insert_call = mock_conn.execute.call_args_list[1]
+    insert_call = mock_conn.execute.call_args_list[-1]
     params = insert_call[0][1]
     assert params["success"] is False
     assert params["row_count"] == 0
+    # quality fields are optional: a crash-time record may not have them
+    assert params["quality_score"] is None
+    assert params["invalid_rows"] is None
 
 
 def test_track_pipeline_run_swallows_connection_failure(monkeypatch, caplog):
