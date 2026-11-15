@@ -152,49 +152,24 @@ jobs:
           print('[GREEN] Dry run parameter verified successfully')
           "
 
-      - name: Generate Detailed Test Report
+      - name: Run unit tests with coverage
+        working-directory: orchestration/Prefect
         run: |
-          cat > report.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>CI Test Report</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              h1 { color: #2E7D32; }
-              .passed { color: green; font-weight: bold; }
-              table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-              th { background-color: #f0f0f0; }
-            </style>
-          </head>
-          <body>
-            <h1>[RUN] CI Pipeline Test Report</h1>
-            <p><strong>Date:</strong> $(date)</p>
-            <p><strong>Branch:</strong> ${{ github.ref }}</p>
-            
-            <h2>Dry Run Results</h2>
-            <p class="passed">[GREEN] Status: Passed</p>
-            
-            <h2>Spark Session</h2>
-            <p>Version: $(python -c 'from pyspark.sql import SparkSession; s = SparkSession.builder.getOrCreate(); print(s.version); s.stop()' 2>/dev/null || echo 'N/A')</p>
-            
-            <h2>Quality Checks - Mock Data Validation</h2>
-            <p class="passed">[GREEN] Status: Passed</p>
-            
-            <h2>Summary</h2>
-            <p>All core pipeline components validated successfully.</p>
-          </body>
-          </html>
-          EOF
-          
-          echo "[GREEN] Detailed HTML test report generated"
+          pip install pytest-cov
+          python -m pytest tests -v \
+            --cov=tasks --cov=etl_flow \
+            --cov-report=term-missing \
+            --cov-report=xml:${{ github.workspace }}/coverage.xml \
+            --junitxml=${{ github.workspace }}/pytest-report.xml
 
-      - name: Upload Test Report
+      - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
-          path: report.html
+          name: test-results
+          path: |
+            coverage.xml
+            pytest-report.xml
           retention-days: 7
 
       - name: Verify Spark Session Creation
@@ -206,40 +181,6 @@ jobs:
           spark.stop()
           "
 
-
-      - name: Run quality checks
-        run: |
-          python -c "
-          import sys
-          import os
-          sys.path.insert(0, os.path.join(os.getcwd(), 'orchestration', 'Prefect'))
-          
-          import pandas as pd
-          import logging
-          from etl_flow import run_quality_checks
-
-          logging.basicConfig(level=logging.INFO)
-
-          mock_data = pd.DataFrame({
-              'OrderID': [f'O{i:03d}' for i in range(100)],
-              'CustomerName': ['Test Customer'] * 100,
-              'Email': ['test@email.com'] * 100,
-              'ProductName': ['Test Product'] * 100,
-              'UnitPrice': ['10.0'] * 100,
-              'TotalAmount': ['100.0'] * 100,
-              'OrderDate': ['2024-01-01'] * 100,
-              'Region': ['Middle East'] * 100,
-              'Status': ['Shipped'] * 100,
-              'Discount': ['0.0'] * 100,
-              'Quantity': [1] * 100
-          })
-
-          mock_data.loc[0, 'Email'] = '{INVALID_EMAIL}'
-          mock_data.loc[1, 'TotalAmount'] = '{INVALID}'
-
-          result = run_quality_checks(mock_data)
-          print('[GREEN] Quality check completed')
-          "
 
 
   docker:
@@ -336,6 +277,7 @@ jobs:
           context: .
           file: ./orchestration/Docker/Dockerfile
           push: false
+          load: true
           tags: prefect-etl:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -358,23 +300,6 @@ jobs:
 
       - name: Trivy (Docker Scan)
         run: |
-          # Create Dockerfile inline (no path issues!)
-          cat > Dockerfile << 'EOF'
-          FROM python:3.13-slim-bullseye
-          WORKDIR /app
-
-          # Java 17 is available in bullseye
-          RUN apt-get update && apt-get install -y openjdk-17-jre-headless && rm -rf /var/lib/apt/lists/*
-
-          COPY requirements.txt .
-          RUN pip install --no-cache-dir -r requirements.txt pandas pandas-gbq prefect pyspark psycopg2-binary prefect-shell python-dotenv
-
-          COPY . .
-          ENV PYTHONPATH="${PYTHONPATH}:/app/orchestration/Prefect"
-          CMD ["python", "-c", "from etl_flow import etl_pipeline; etl_pipeline()"]
-          
-          # Build and scan
-          docker build -t prefect-etl:latest .
           trivy image \
             --severity HIGH,CRITICAL \
             --exit-code 1 \
@@ -383,7 +308,6 @@ jobs:
             --cache-dir /tmp/trivy-cache \
             prefect-etl:latest
           echo "[GREEN] Trivy scan completed"
-        
 
   Notify:
     needs: [Prefect, validation, docker, security]
