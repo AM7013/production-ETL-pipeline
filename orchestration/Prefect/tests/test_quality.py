@@ -205,12 +205,15 @@ def test_quarantine_writes_only_invalid_rows(tmp_path, monkeypatch):
     assert qdf["quarantine_reason"].notna().all()
 
 
-def test_quarantine_not_written_when_quality_passes(tmp_path, monkeypatch):
+def test_quarantine_written_even_when_quality_passes(tmp_path, monkeypatch):
+    # Intended behaviour: bad rows are always isolated. When the overall score
+    # still meets the threshold, the clean rows proceed and the bad rows land
+    # in the quarantine file; the run is only halted when the score is too low.
     quarantine_path = tmp_path / "quarantine_zone.csv"
     monkeypatch.setattr("tasks.quality.QUARANTINE_FILE", str(quarantine_path))
     monkeypatch.setattr("tasks.quality.QUALITY_THRESHOLD", 50.0)
 
-    # 1 bad out of 3 → 66% → still passes
+    # 1 bad out of 3 → 66.7% → still passes
     df = pd.DataFrame([
         make_row(OrderID=1),
         make_row(OrderID=2),
@@ -219,5 +222,21 @@ def test_quarantine_not_written_when_quality_passes(tmp_path, monkeypatch):
     result_df, report = run_quality_checks.fn(df)
 
     assert report["passed"] is True
+    assert len(result_df) == 2                      # clean rows proceed
+    assert quarantine_path.exists()                 # bad row still isolated
+    qdf = pd.read_csv(quarantine_path)
+    assert len(qdf) == 1
+    assert qdf["OrderID"].tolist() == [3]
+
+
+def test_no_quarantine_file_when_all_rows_clean(tmp_path, monkeypatch):
+    quarantine_path = tmp_path / "quarantine_zone.csv"
+    monkeypatch.setattr("tasks.quality.QUARANTINE_FILE", str(quarantine_path))
+
+    df = pd.DataFrame([make_row(OrderID=i) for i in range(5)])
+    result_df, report = run_quality_checks.fn(df)
+
+    assert report["passed"] is True
+    assert report["invalid_rows"] == 0
     assert not quarantine_path.exists()
-    assert len(result_df) == 2
+    assert len(result_df) == 5
