@@ -21,7 +21,7 @@ WORKDIR /app
 RUN useradd -m -u 1000 appuser 
 COPY --from=builder /home/appuser/.local /home/appuser/.local
 COPY etl_pipeline.py .
-COPY cleaned_data_test.csv .
+COPY samples/cleaned_data_test.csv .
 
 
 RUN chown -R appuser:appuser /app
