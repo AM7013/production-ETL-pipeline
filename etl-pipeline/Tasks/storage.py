@@ -15,12 +15,7 @@ from sqlalchemy.engine import Engine
 from prefect import task
 
 from config import get_postgres_url, TABLE_NAME, BQ_PROJECT_ID, BQ_DATASET, BQ_TABLE
-from google.cloud import bigquery
-from google.api_core.exceptions import NotFound
-from config import DB_ENGINE
 
-
-_bq_client = None
 logger = logging.getLogger(__name__)
 
 _engine: Engine = None
@@ -32,8 +27,7 @@ NATURAL_KEY = "OrderID"
 def _get_engine() -> Engine:
     global _engine
     if _engine is None:
-        url = get_postgres_url().replace("postgresql://", "postgresql+psycopg2://", 1)
-        _engine = create_engine(url, hide_parameters=True)
+        _engine = create_engine(get_postgres_url(), hide_parameters=True)
     return _engine
 
 
@@ -186,64 +180,85 @@ def load_to_postgres(
     logger.info("[OK] Data loaded into Postgres!")
 
 
-
-def _get_bq_client() -> bigquery.Client:
-    global _bq_client
-    if _bq_client is None:
-        _bq_client = bigquery.Client(project=BQ_PROJECT_ID)
-    return _bq_client
-
-
-def _bq_table_exists(client: bigquery.Client, table_ref: str) -> bool:
-    try:
-        client.get_table(table_ref)
-        return True
-    except NotFound:
-        return False
-
-
-
 @task(name="BigQuery Load", retries=3, retry_delay_seconds=10, on_failure=[alert_on_crash])
-def load_to_bigquery(pandas_df: pd.DataFrame, run_id: str) -> None:
-
-    numeric_columns = ['TotalAmount', 'UnitPrice', 'Discount', 'Quantity']
-    
-    for col in numeric_columns:
-        if col in pandas_df.columns:
-            # Remove any $, commas, etc.
-            pandas_df[col] = pandas_df[col].astype(str).str.replace(r'[$,]', '', regex=True)
-            # Convert to float, coerce errors to NaN
-            pandas_df[col] = pd.to_numeric(pandas_df[col], errors='coerce')
-
+def load_to_bigquery(
+    pandas_df: pd.DataFrame,
+    run_id: str,
+    idempotent: bool = True,
+) -> None:
     if pandas_df is None or pandas_df.empty:
         logger.warning("[SKIP] No data to load into BigQuery.")
         return
 
-    tagged_df = _with_run_metadata(pandas_df, run_id)
-    destination_table = f"{BQ_PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}"
-    client = _get_bq_client()
+    if NATURAL_KEY not in pandas_df.columns:
+        raise ValueError(
+            f"[LOAD] Natural key '{NATURAL_KEY}' missing from DataFrame – "
+            f"cannot perform idempotent load."
+        )
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
-        autodetect=True,
+    tagged_df = _with_run_metadata(pandas_df, run_id)
+    destination_table = f"{BQ_DATASET}.{BQ_TABLE}"
+    project_id = BQ_PROJECT_ID
+
+    if not idempotent:
+        logger.info(f"[SEND] Appending to BigQuery -> {destination_table} (run_id={run_id})...")
+        pandas_gbq.to_gbq(
+            tagged_df,
+            destination_table=destination_table,
+            project_id=project_id,
+            if_exists="append",
+        )
+        logger.info(f"[OK] Uploaded {len(tagged_df):,} rows to BigQuery")
+        return
+
+    # Idempotent path for BigQuery
+    temp_table = f"{BQ_DATASET}._tmp_{BQ_TABLE}_{run_id.replace('-', '')[:12]}"
+
+    logger.info(
+        f"[SEND] Idempotent load to BigQuery -> {destination_table} "
+        f"(via temp {temp_table}, run_id={run_id})..."
     )
 
-    # Partitioning/clustering can only be set at table creation - BigQuery
-    # rejects a load job that tries to change them on an existing table.
-    if not _bq_table_exists(client, destination_table):
-        logger.info(f"[CREATE] '{destination_table}' doesn't exist yet - "
-                    f"creating with daily partitioning on loaded_at, clustered on run_id/{NATURAL_KEY}.")
-        job_config.time_partitioning = bigquery.TimePartitioning(
-            type_=bigquery.TimePartitioningType.DAY, field="loaded_at"
-        )
-        job_config.clustering_fields = ["run_id", NATURAL_KEY]
-
-    logger.info(f"[SEND] Loading {len(tagged_df):,} rows into BigQuery -> {destination_table} (run_id={run_id})...")
     try:
-        job = client.load_table_from_dataframe(tagged_df, destination_table, job_config=job_config)
-        job.result()  # blocks until the load job finishes, raises on failure
+        # 1. Write batch to temp table
+        pandas_gbq.to_gbq(
+            tagged_df,
+            destination_table=temp_table,
+            project_id=project_id,
+            if_exists="replace",
+        )
+
+        # 2. DELETE matching keys + INSERT new rows
+        sql = f"""
+        BEGIN
+          DELETE FROM `{project_id}.{destination_table}`
+          WHERE {NATURAL_KEY} IN (
+            SELECT {NATURAL_KEY} FROM `{project_id}.{temp_table}`
+          );
+
+          INSERT INTO `{project_id}.{destination_table}`
+          SELECT * FROM `{project_id}.{temp_table}`;
+
+          DROP TABLE `{project_id}.{temp_table}`;
+        END;
+        """
+
+        from google.cloud import bigquery
+        client = bigquery.Client(project=project_id)
+        job = client.query(sql)
+        job.result()
+
+        logger.info(
+            f"[OK] Idempotent upload of {len(tagged_df):,} rows to BigQuery -> {destination_table}"
+        )
+
     except Exception as e:
-        logger.error(f"[ALERT] BigQuery load failed: {type(e).__name__}: {str(e)[:500]}")
+        logger.error(f"[ALERT] BigQuery idempotent load failed: {e}")
+        try:
+            from google.cloud import bigquery
+            client = bigquery.Client(project=project_id)
+            client.delete_table(f"{project_id}.{temp_table}", not_found_ok=True)
+        except Exception:
+            pass
         raise
 
-    logger.info(f"[OK] Uploaded {job.output_rows:,} rows to BigQuery -> {destination_table}")
