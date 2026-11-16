@@ -2,6 +2,11 @@ pandas
 sqlalchemy
 psycopg2-binary
 python-dotenv
-prefect
+prefect==3.7.2
+prefect_shell==0.3.6
 pyspark
-pytest>=8.0.0
+pandas-gbq
+dbt-postgres
+fastapi==0.136.3
+pydantic==2.12.5
+starlette==0.52.1

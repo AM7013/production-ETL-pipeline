@@ -17,6 +17,8 @@ from prefect import task
 from config import get_postgres_url, TABLE_NAME, BQ_PROJECT_ID, BQ_DATASET, BQ_TABLE
 from google.cloud import bigquery
 from google.api_core.exceptions import NotFound
+from config import DB_ENGINE
+
 
 _bq_client = None
 logger = logging.getLogger(__name__)
@@ -25,7 +27,6 @@ _engine: Engine = None
 
 # Natural key used for idempotent loads
 NATURAL_KEY = "OrderID"
-
 
 
 def _get_engine() -> Engine:
@@ -126,6 +127,7 @@ def load_to_postgres(
     idempotent: bool = True,
 ) -> None:
     table_name = table_name or TABLE_NAME
+    pandas_df.to_sql("my_table", DB_ENGINE, if_exists="append")
 
     if pandas_df is None or pandas_df.empty:
         logger.warning("[SKIP] No data to load into Postgres.")
@@ -204,6 +206,16 @@ def _bq_table_exists(client: bigquery.Client, table_ref: str) -> bool:
 
 @task(name="BigQuery Load", retries=3, retry_delay_seconds=10, on_failure=[alert_on_crash])
 def load_to_bigquery(pandas_df: pd.DataFrame, run_id: str) -> None:
+
+    numeric_columns = ['TotalAmount', 'UnitPrice', 'Discount', 'Quantity']
+    
+    for col in numeric_columns:
+        if col in pandas_df.columns:
+            # Remove any $, commas, etc.
+            pandas_df[col] = pandas_df[col].astype(str).str.replace(r'[$,]', '', regex=True)
+            # Convert to float, coerce errors to NaN
+            pandas_df[col] = pd.to_numeric(pandas_df[col], errors='coerce')
+
     if pandas_df is None or pandas_df.empty:
         logger.warning("[SKIP] No data to load into BigQuery.")
         return
