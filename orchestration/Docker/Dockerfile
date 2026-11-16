@@ -20,7 +20,7 @@ WORKDIR /app
 
 RUN useradd -m -u 1000 appuser 
 COPY --from=builder /home/appuser/.local /home/appuser/.local
-COPY etl_pipeline.py .
+COPY etl-pipeline/etl_pipeline.py .
 COPY samples/cleaned_data_test.csv .
 
 
