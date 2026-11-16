@@ -127,7 +127,6 @@ def load_to_postgres(
     idempotent: bool = True,
 ) -> None:
     table_name = table_name or TABLE_NAME
-    pandas_df.to_sql("my_table", DB_ENGINE, if_exists="append")
 
     if pandas_df is None or pandas_df.empty:
         logger.warning("[SKIP] No data to load into Postgres.")

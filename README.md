@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen" />
   <img src="https://img.shields.io/badge/Version-1.0.0-blue" />
   <img src="https://img.shields.io/badge/Records-500K%2B-blue" />
+  <img src="https://github.com/AM7013/production-ETL-pipeline/actions/workflows/prefect-ci.yml/badge.svg" />
 </p>
 
 <p align="center">
@@ -161,7 +162,7 @@ Most data pipelines:
 - Advanced Data Quality Engine with automated scoring across 11 columns and intelligent quarantine system
 - Modern Transformations using dbt with incremental models, SCD Type 2 snapshots, custom macros, and tests
 - Dual Warehousing setup with PostgreSQL for staging and BigQuery for analytics (with proper partitioning and clustering)
-- Full Containerization using Docker with multi-stage builds and health checks
+- Full Containerization using Docker with multi-stage builds
 - Production-grade CI/CD using GitHub Actions with security scanning, manual approval gates, and deployment tagging
 - Robust Orchestration using Prefect Cloud (migrated from Airflow for better developer experience)
 
@@ -169,7 +170,7 @@ Most data pipelines:
 
 - Average Quality Score: 97.5%
 - Total Rows Processed: 500,000+
-- Quarantine Logic: Automatically isolates rows below 80% quality threshold
+- Quarantine Logic: invalid rows are always written to `quarantine_zone.csv` with the reason; if the overall score falls below the 80% threshold, the run halts before any load
 - Invalid Data Detected: ~2.5% of records (auto-quarantined)
 - Columns Validated: 11 critical columns
 - Daily run time at 6 AM
@@ -200,8 +201,9 @@ Two GitHub Actions workflows gate every change:
 **CI** (`prefect-ci.yml`) — runs on every push/PR to `master`:
 - Verifies the Prefect flow imports cleanly
 - Dry-run parameter validation
-- Data quality engine tested against mock data (including deliberately 
-  invalid rows, to confirm quarantine logic actually fires)
+- Unit tests with coverage (pytest): quality engine, schema validation, 
+  storage, tracking and flow branching, including deliberately invalid rows 
+  to confirm quarantine logic actually fires
 - Docker image build
 - Security: CodeQL static analysis, Trivy container scan, TruffleHog 
   secrets scan, pip-audit dependency scan
@@ -244,7 +246,7 @@ CSV_FILENAME=cleaned_data_test.csv
 
 - [ETL-Pipeline](etl-pipeline/etl_pipeline.py)
 - [Production Orchestration Flow](https://github.com/AM7013/production-ETL-pipeline/blob/master/orchestration/Prefect/etl_flow.py) — the Prefect flow actually run by CI/CD
-- [Modular Pipeline Components](https://github.com/AM7013/production-ETL-pipeline/blob/master/etl-pipeline/tasks) — reusable, independently-tested task modules (extraction, quality scoring, storage, tracking)
+- [Modular Pipeline Components](https://github.com/AM7013/production-ETL-pipeline/blob/master/orchestration/Prefect/tasks) — reusable, independently-tested task modules (extraction, quality scoring, storage, tracking)
 - [dbt Project](https://github.com/AM7013/production-ETL-pipeline/blob/master/dbt) — models, snapshots, macros, and tests
 - [CI/CD Workflows](https://github.com/AM7013/production-ETL-pipeline/blob/master/.github/workflows)
 - [Sample Data](https://github.com/AM7013/production-ETL-pipeline/blob/master/samples)
@@ -255,9 +257,10 @@ CSV_FILENAME=cleaned_data_test.csv
 
 | Issue | Solution |
 |-------|----------|
-| `docker-compose up` fails | Make sure Docker Desktop is running and you have copied `.env.example` to `.env` |
-| Permission error on volumes | Run `docker-compose down -v` then `docker-compose up --build` |
-| BigQuery authentication error | Set up your `GOOGLE_APPLICATION_CREDENTIALS` in `.env` |
+| `docker build` fails | Run it from the repo root (the folder that contains `requirements.txt`) and make sure Docker Desktop is running |
+| `Connection refused` to Postgres inside the container | `localhost` is the container itself; set `DB_HOST=host.docker.internal` for a local Postgres, or use your hosted database's host |
+| `Timed out while attempting to connect to ephemeral Prefect API server` or Prefect 401/404 | Pass `PREFECT_API_URL` (format `https://api.prefect.cloud/api/accounts/<account_id>/workspaces/<workspace_id>`) and `PREFECT_API_KEY` with `-e` |
+| BigQuery authentication error | Mount your service-account key into the container and set `GOOGLE_APPLICATION_CREDENTIALS` to its path inside the container |
 | dbt model failures | Run `dbt debug` and check connection to BigQuery/PostgreSQL |
 | Prefect flow not visible | Check you're logged in with `prefect cloud login` |
 | High memory usage | Increase Docker resource limits or reduce Spark partitions |
@@ -295,11 +298,29 @@ cd production-ETL-pipeline
 
 cp .env.example .env
 
-docker-compose up --build
+docker build -f orchestration/Docker/Dockerfile -t prefect-etl .
 ```
-use this line for running the all the content inside the [Tests](etl-pipeline/Tests/) folder
+
+Run the pipeline in the container (the image reads secrets at run time, nothing is baked in):
 ``` bash
-python -m pytest tests/ -v
+docker run --rm \
+  --env-file .env \
+  -e PREFECT_API_URL=<your Prefect Cloud API URL> \
+  -e PREFECT_API_KEY=<your Prefect API key> \
+  -v "/path/to/your-gcp-key.json:/app/gcp-key.json" \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json \
+  prefect-etl python etl_flow.py
+```
+Notes:
+- `PREFECT_API_URL` must be the API address, `https://api.prefect.cloud/api/accounts/<account_id>/workspaces/<workspace_id>`, not the `app.prefect.cloud` page address.
+- Inside the container `localhost` is the container itself. For a Postgres running on your machine set `DB_HOST=host.docker.internal`; a hosted database (Neon, etc.) works with its normal host.
+- Keep your Google service-account key out of the repo and out of the image; mount it as shown.
+- On Windows PowerShell replace the `\` line endings with a backtick.
+
+To run the unit tests (the same ones CI runs, in [orchestration/Prefect/tests](orchestration/Prefect/tests/)):
+``` bash
+cd orchestration/Prefect
+python -m pytest tests -v
 ```
 
 ## Structure
@@ -309,6 +330,8 @@ production-ETL-pipeline/
 │   └── workflows/
 │       ├── prefect-ci.yml
 │       └── prefect-cd.yml
+├── Docs/
+│   └── ADR/                     # Architecture decision records
 ├── Screenshot/                  # Screenshots for README
 ├── dbt/                         # dbt project
 │   ├── macros/
@@ -316,24 +339,26 @@ production-ETL-pipeline/
 │   ├── snapshots/
 │   ├── tests/
 │   └── ... (other dbt folders)
-├── etl-pipeline/                # Core ETL logic
-├── orchestration/               # Prefect flows
+├── etl-pipeline/                # Earlier ETL modules and Docker Compose setup; Sandbox/ holds side experiments
+├── orchestration/
+│   ├── Docker/
+│   │   └── Dockerfile           # Image built and scanned in CI
 │   └── Prefect/
-│       └── etl_flow.py
+│       ├── etl_flow.py          # The flow run by CI/CD
+│       ├── prefect.yaml         # Deployment + daily 6 AM UTC schedule
+│       ├── tasks/               # Ingestion, quality, storage, tracking modules
+│       └── tests/               # Unit tests run in CI
 ├── samples/                     # Sample data
 │   └── cleaned_data_test.csv
-├── sandbox/                     # Experimental code
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
 ├── .prefectignore
 ├── .trivyignore
-├── Dockerfile
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
-├── run_cd.py
-└── (other root files)
+└── run_cd.py
 ```
 
 
