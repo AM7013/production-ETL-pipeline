@@ -2,11 +2,16 @@ import os
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
-
+from sqlalchemy import create_engine
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 load_dotenv(PROJECT_ROOT / ".env")
+
+DB_ENGINE = create_engine(
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+)
 
 # Google BigQuery Configuration
 BQ_PROJECT_ID = os.getenv("BQ_PROJECT_ID", "production-etl-pipeline")
