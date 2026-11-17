@@ -42,6 +42,7 @@ jobs:
             exit 1
           fi
 
+
           mkdir -p dbt
           cat > dbt/profiles.yml << EOF
           pipeline_dbt:
