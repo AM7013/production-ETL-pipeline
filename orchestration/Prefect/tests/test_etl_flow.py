@@ -109,6 +109,34 @@ def test_stop_spark_called_even_when_extract_fails(monkeypatch):
     etl_flow.stop_spark.assert_called_once()
  
  
+def test_crash_during_extract_is_tracked_as_failed_and_reraised(monkeypatch):
+    monkeypatch.setattr(etl_flow, "extract_data", MagicMock(side_effect=RuntimeError("simulated failure")))
+
+    # The error must still propagate so Prefect marks the run failed and alerts fire.
+    with pytest.raises(RuntimeError, match="simulated failure"):
+        etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
+
+    etl_flow.track_pipeline_run.assert_called_once()
+    args, kwargs = etl_flow.track_pipeline_run.call_args
+    assert kwargs.get("success") is False
+    assert isinstance(args[0], str) and len(args[0]) > 0
+
+
+def test_crash_during_load_is_tracked_as_failed_with_the_runs_id(monkeypatch):
+    monkeypatch.setattr(etl_flow, "run_quality_checks", MagicMock(return_value=(make_df(), _passing_report())))
+    monkeypatch.setattr(etl_flow, "load_to_postgres", MagicMock(side_effect=RuntimeError("db down")))
+
+    with pytest.raises(RuntimeError, match="db down"):
+        etl_flow.etl_pipeline.fn(target_date="2027-01-01", dry_run=False)
+
+    etl_flow.load_to_bigquery.assert_not_called()
+    etl_flow.track_pipeline_run.assert_called_once()
+    args, kwargs = etl_flow.track_pipeline_run.call_args
+    assert kwargs.get("success") is False
+    # Same run_id the load task received, so the row can be joined to the data.
+    assert args[0] == etl_flow.load_to_postgres.call_args.kwargs["run_id"]
+
+
 def test_stop_spark_called_on_success_too(monkeypatch):
     monkeypatch.setattr(etl_flow, "run_quality_checks", MagicMock(return_value=(make_df(), _passing_report())))
  

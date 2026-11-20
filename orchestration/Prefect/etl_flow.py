@@ -95,6 +95,14 @@ def etl_pipeline(target_date: Optional[str] = None, dry_run: bool = False) -> No
                     quality_score=quality_report.get("quality_score"),
                     invalid_rows=quality_report.get("invalid_rows"),
                 )
+    except Exception:
+        # Any crash above (extract, load, dbt ...) still leaves a failed-run row.
+        # The quality-gate failure is tracked separately and does not raise, so
+        # this never double-counts. track_pipeline_run swallows its own errors,
+        # so a tracking problem can't hide the original exception, which is
+        # re-raised so Prefect marks the run failed and the alerts still fire.
+        track_pipeline_run(run_id, config.TABLE_NAME, 0, success=False)
+        raise
     finally:
         # Runs whether the try block succeeded, failed the quality gate,
         # or raised an exception - Spark always gets released.
